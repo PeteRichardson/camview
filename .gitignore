@@ -1,3 +1,5 @@
+config.json
+
 #-------------------------------------------------
 # macOS housekeeping
 #-------------------------------------------------
@@ -54,4 +56,3 @@ DerivedData/
 # Playgrounds’ live data & timeline
 timeline.xctimeline
 playground.xcworkspace/xcuserdata/
-

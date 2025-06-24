@@ -14,23 +14,35 @@
 /* Begin PBXCopyFilesBuildPhase section */
 		C1711B382E0B47CB00ACD8FE /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
+			buildActionMask = 12;
+			dstPath = "";
+			dstSubfolderSpec = 6;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 1;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		C1711B3A2E0B47CB00ACD8FE /* camview */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = camview; sourceTree = BUILT_PRODUCTS_DIR; };
-		C1711B4A2E0B4BC500ACD8FE /* .gitignore 2 */ = {isa = PBXFileReference; lastKnownFileType = text; path = ".gitignore 2"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		C1711B4F2E0B56BD00ACD8FE /* Exceptions for "camview" folder in "Copy Files" phase from "camview" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = C1711B382E0B47CB00ACD8FE /* CopyFiles */;
+			membershipExceptions = (
+				config.json,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		C1711B3C2E0B47CB00ACD8FE /* camview */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C1711B4F2E0B56BD00ACD8FE /* Exceptions for "camview" folder in "Copy Files" phase from "camview" target */,
+			);
 			path = camview;
 			sourceTree = "<group>";
 		};
@@ -54,7 +66,6 @@
 			children = (
 				C1711B3C2E0B47CB00ACD8FE /* camview */,
 				C1711B3B2E0B47CB00ACD8FE /* Products */,
-				C1711B4A2E0B4BC500ACD8FE /* .gitignore 2 */,
 			);
 			sourceTree = "<group>";
 		};
