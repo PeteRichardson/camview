@@ -58,22 +58,28 @@ struct CamView : AsyncParsableCommand {
     var view: String = "Driveway"
     
     mutating func run() async throws {
-        let url = URL(fileURLWithPath: "config.json")
+        let url = URL(fileURLWithPath: "/Users/pete/bin/config.json")
         let data = try Data(contentsOf: url)
         let config = try JSONDecoder().decode(Config.self, from: data)
 
-        // Usage
         let protect = Protect(host: config.unifi.protect.api.host, apiKey: config.unifi.protect.api.apiKey)
         
-        try await printViewports(protect)
-        print()
-        
-        try await printLiveviews(protect)
-        print()
-        
-        try await protect.changeViewportView(on: "6638057e026c9303e40469bf", to: "685ae00803c5f203e4056818")
-        
-        print("# You want me to switch to \(view)")
+        let lcView = view.lowercased()
+        for liveview in try await protect.getLiveviews() {
+            if liveview.name.lowercased() == lcView {
+                try await protect.changeViewportView(on: "6638057e026c9303e40469bf", to: liveview.id)
+                return
+            }
+        }
+//        try await printViewports(protect)
+//        print()
+//        
+//        try await printLiveviews(protect)
+//        print()
+//        
+//        try await protect.changeViewportView(on: "6638057e026c9303e40469bf", to: "685ae00803c5f203e4056818")
+//        
+//        print("# You want me to switch to \(view)")
         
     }
 }
