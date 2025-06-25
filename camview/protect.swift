@@ -25,11 +25,17 @@ class Protect {
     private let host: String
     private let apiKey: String
     private var url: String
+    private var headers: [String: String] = [:]
     
     init(host: String, apiKey: String) {
         self.host = host
         self.apiKey = apiKey
         self.url = "https://\(host)/proxy/protect/integration"
+        self.headers = [
+            "X-API-KEY": self.apiKey,
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        ]
     }
     
     
@@ -38,11 +44,6 @@ class Protect {
             return cached
         }
         let url = URL(string: "\(url)/v1/viewers")!
-        let headers = [
-            "X-API-KEY": self.apiKey,
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        ]
         
         let data = try await fetchJSON(from: url, headers: headers)
         let viewports = try JSONDecoder().decode([Viewport].self, from: data)
