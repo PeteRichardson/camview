@@ -15,13 +15,8 @@ struct Config: Codable {
         let apiKey: String
     }
 
-    typealias ViewportMap = [String: String]
-    typealias MultiviewMap = [String: String]
-
     struct Protect: Codable {
         let api: ProtectAPI
-        let viewports: ViewportMap
-        let multiviews: MultiviewMap
     }
 
     struct Unifi: Codable {
@@ -64,22 +59,15 @@ struct CamView : AsyncParsableCommand {
 
         let protect = Protect(host: config.unifi.protect.api.host, apiKey: config.unifi.protect.api.apiKey)
         
+        
+        let viewportId = try await protect.getViewports().first!.id
         let lcView = view.lowercased()
         for liveview in try await protect.getLiveviews() {
             if liveview.name.lowercased() == lcView {
-                try await protect.changeViewportView(on: "6638057e026c9303e40469bf", to: liveview.id)
+                try await protect.changeViewportView(on: viewportId, to: liveview.id)
                 return
             }
         }
-//        try await printViewports(protect)
-//        print()
-//        
-//        try await printLiveviews(protect)
-//        print()
-//        
-//        try await protect.changeViewportView(on: "6638057e026c9303e40469bf", to: "685ae00803c5f203e4056818")
-//        
-//        print("# You want me to switch to \(view)")
         
     }
 }
