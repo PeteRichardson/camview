@@ -32,6 +32,22 @@ struct Config: Codable {
 }
 
 
+func printViewports(_ protect: Protect) async throws {
+    print("VIEWPORTS:\n---------------------------------")
+    let viewports = try await protect.getViewports()
+    for vp in viewports {
+        print("\(vp.name) = \(vp.id)")
+    }
+}
+
+func printLiveviews(_ protect: Protect) async throws {
+    print("LIVEVIEWS:\n---------------------------------")
+    let liveviews = try await protect.getLiveviews()
+    for lv in liveviews {
+        print("\(lv.name) = \(lv.id) [isDefault: \(lv.isDefault)], isGlobal: \(lv.isGlobal)]")
+    }
+}
+
 
 @main
 struct CamView : AsyncParsableCommand {
@@ -46,12 +62,16 @@ struct CamView : AsyncParsableCommand {
 
         // Usage
         let protect = Protect(host: config.unifi.protect.api.host, apiKey: config.unifi.protect.api.apiKey)
-        let viewports = try await protect.getViewports()
-        for vp in viewports {
-            print("\(vp.name) = \(vp.id)")
-        }
         
-        print("You want me to switch to \(view)")
+        try await printViewports(protect)
+        print()
+        
+        try await printLiveviews(protect)
+        print()
+
+        
+        
+        print("# You want me to switch to \(view)")
         
     }
 }

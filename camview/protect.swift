@@ -20,17 +20,36 @@ struct Viewport: Decodable {
 
 }
 
+struct Slot: Decodable {
+    var cameras: [String]
+    var cycleMode: String
+    var cycleInterval: Int
+}
+
+struct Liveview: Decodable {
+    var id: String
+    var modelKey: String
+    var name: String
+    var isDefault: Bool
+    var isGlobal: Bool
+    var owner: String
+    var layout: Int
+    var slots: [Slot]
+}
+
 class Protect {
     private var _viewports: [Viewport]? = nil
+    private var _liveviews: [Liveview]? = nil
+    
     private let host: String
     private let apiKey: String
-    private var url: String
+    private var baseAPIUrl: String
     private var headers: [String: String] = [:]
     
     init(host: String, apiKey: String) {
         self.host = host
         self.apiKey = apiKey
-        self.url = "https://\(host)/proxy/protect/integration"
+        self.baseAPIUrl = "https://\(host)/proxy/protect/integration"
         self.headers = [
             "X-API-KEY": self.apiKey,
             "Content-Type": "application/json",
@@ -43,14 +62,24 @@ class Protect {
         if let cached = _viewports {
             return cached
         }
-        let url = URL(string: "\(url)/v1/viewers")!
+        let url = URL(string: "\(baseAPIUrl)/v1/viewers")!
         
         let data = try await fetchJSON(from: url, headers: headers)
         let viewports = try JSONDecoder().decode([Viewport].self, from: data)
-
-        print(viewports)        // TODO: decode JSON
-        _viewports = []
-        return _viewports!
+        _viewports = viewports
+        return viewports
+    }
+    
+    func getLiveviews() async throws -> [Liveview] {
+        if let cached = _liveviews {
+            return cached
+        }
+        let url = URL(string: "\(baseAPIUrl)/v1/liveviews")!
+        
+        let data = try await fetchJSON(from: url, headers: headers)
+        let liveviews = try JSONDecoder().decode([Liveview].self, from: data)
+        _liveviews = liveviews
+        return liveviews
     }
 }
     
