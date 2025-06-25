@@ -81,5 +81,28 @@ class Protect {
         _liveviews = liveviews
         return liveviews
     }
+    
+    func changeViewportView(on viewportId: String,to liveviewId: String) async throws {
+        let url = URL(string: "\(baseAPIUrl)/v1/viewers/\(viewportId)")!
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        headers.forEach { key, value in
+            request.setValue(value, forHTTPHeaderField: key)
+        }
+        
+        let body = ["liveview": liveviewId]
+        request.httpBody = try JSONEncoder().encode(body)
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let (_, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200..<300).contains(httpResponse.statusCode) else {
+            throw URLError(.badServerResponse)
+        }
+    }
+        
+
 }
     

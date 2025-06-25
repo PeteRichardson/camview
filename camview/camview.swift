@@ -49,6 +49,8 @@ func printLiveviews(_ protect: Protect) async throws {
 }
 
 
+
+
 @main
 struct CamView : AsyncParsableCommand {
 
@@ -68,8 +70,8 @@ struct CamView : AsyncParsableCommand {
         
         try await printLiveviews(protect)
         print()
-
         
+        try await protect.changeViewportView(on: "6638057e026c9303e40469bf", to: "685ae00803c5f203e4056818")
         
         print("# You want me to switch to \(view)")
         
