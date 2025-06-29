@@ -46,21 +46,24 @@ struct CamView : AsyncParsableCommand {
     static var configuration = CommandConfiguration(
         abstract: "CLI to control a Unifi Protect Viewport.",
         discussion: """
-You can switch to a Liveview by passing the Liveview name on the cmd line.
+SWITCHING LIVEVIEWS:
+You can switch to an available Liveview by passing the Liveview name on the cmd line.
 Names are case-INsensitive.
-e.g.   camview Driveway
+e.g.
+camview Driveway
 
 If you don't give a Liveview name, it will try a view called "Default"
 
-You can list Viewports with -p and Liveviews with -v
-You'll get a summary view of names and ids.
-You can get more data in csv format by specifying -c.
+NOTE: Currently, camview changes the liveview on only the *first* Viewport
+returned by the Protect API.   This will be fixed in a future version.
+
+LISTING VIEWPORTS AND LIVEVIEWS:
+* You can list available Viewports with `camview -p`
+* You can list available Liveviews with `camview -v`
+* You can get more data in csv format by adding `-c`.  e.g.  `camview -v -c`
 
 
-Limitations:
-• camview changes the Liveview on only the *first* Viewport that the Protect API returns.
-
-Authentication:
+AUTHENTICATION:
 Camview requires a ~/.config/camview.json file with Unifi Protect API credentials.
 It must contain your Unifi Protect host IP or DNS name, and your API key.  Like this:
 {

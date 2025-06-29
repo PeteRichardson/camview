@@ -18,21 +18,23 @@ OPTIONS:
 -h, --help              Show help information.
 ```
 
-You can switch to a Liveview by passing the Liveview name on the cmd line.
+#### Switching Liveviews:
+You can switch to an available Liveview by passing the Liveview name on the cmd line.
 Names are case-INsensitive.
+
 ```
 camview Driveway
 ```
 
 If you don't give a Liveview name, it will try a view called "Default"
 
-You can list Viewports with -p and Liveviews with -v
-You'll get a summary view of names and ids.
-You can get more data in csv format by specifying -c.
+NOTE: Currently, camview changes the liveview on only the *first* Viewport
+returned by the Protect API.   This will be fixed in a future version.
 
-
-### Limitations:
-• camview changes the Liveview on only the *first* Viewport that the Protect API returns.
+#### Listing Viewports and Liveviews
+* You can list available Viewports with `camview -p`
+* You can list available Liveviews with `camview -v`
+* You can get more data in csv format by adding `-c`.  e.g.  `camview -v -c`
 
 ### Authentication:
 Camview requires a ~/.config/camview.json file with Unifi Protect API credentials.
