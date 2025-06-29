@@ -28,14 +28,31 @@ func fetchJSON(from url: URL, headers: [String: String]) async throws -> Data {
 }
 
 
-struct Viewport: Decodable, Comparable {
+struct Viewport: Decodable, Comparable, CustomCSVConvertible {
+    
     var id: String
     var liveview: String
     var modelKey: String
     var name: String
     var state: String
     var streamLimit: Int
+    
+    static var csvHeader : String = "name,id,liveview,modelKey,state,streamLimit"
 
+    var description: String {
+        "\(name.padded(to:17)) <\(id)> (viewing '\(liveview)')"
+    }
+    func csvDescription() -> String {
+        "\(name),\(id),\(liveview),\(modelKey),\(state),\(streamLimit)"
+    }
+    
+    static func < (lhs: Viewport, rhs: Viewport) -> Bool {
+        return lhs.name < rhs.name
+    }
+    static func == (lhs: Viewport, rhs: Viewport) -> Bool {
+        lhs.name == rhs.name
+    }
+    
 }
 
 struct Slot: Decodable {
@@ -44,7 +61,8 @@ struct Slot: Decodable {
     var cycleInterval: Int
 }
 
-struct Liveview: Decodable {
+struct Liveview: Decodable, Comparable, CustomCSVConvertible {
+    
     var id: String
     var modelKey: String
     var name: String
@@ -53,11 +71,29 @@ struct Liveview: Decodable {
     var owner: String
     var layout: Int
     var slots: [Slot]
+
+    static var csvHeader : String = "name,id,isDefault,isGlobal,owner,layout"
+
+    var description: String {
+        "\(name.padded(to:17)) <\(id)> \(isDefault ? "(default)" : "")"
+    }
+    
+    func csvDescription() -> String {
+        "\(name),\(id),\(isDefault),\(isGlobal),\(owner),\(layout)"
+    }
+    
+    static func < (lhs: Liveview, rhs: Liveview) -> Bool {
+        return lhs.name < rhs.name
+    }
+    static func == (lhs: Liveview, rhs: Liveview) -> Bool {
+        lhs.name == rhs.name
+    }
 }
 
-class Protect {
-    private var _viewports: [Viewport]? = nil
-    private var _liveviews: [Liveview]? = nil
+
+actor Protect {
+    private var _viewports: [Viewport]?
+    private var _liveviews: [Liveview]?
     
     private let host: String
     private let apiKey: String
@@ -84,8 +120,20 @@ class Protect {
         
         let data = try await fetchJSON(from: url, headers: headers)
         let viewports = try JSONDecoder().decode([Viewport].self, from: data)
-        _viewports = viewports
-        return viewports
+        
+        // Now that we have the list of viewports, we can lookup the currently
+        // visible Liveview (we have its id) and get the name, which is
+        // easier for the users to understand.
+        // Viewport is a struct, so we can't modify them.  We have to copy.
+        // Need asyncMap extension on Array for this to work.
+        let updatedViewports = try await viewports.asyncMap { viewport in
+            var copy = viewport
+            copy.liveview = try await self.lookupLiveviewName(byId: viewport.liveview)!
+            return copy
+        }
+        _viewports = updatedViewports.sorted()
+        
+        return _viewports!
     }
     
     func getLiveviews() async throws -> [Liveview] {
@@ -96,8 +144,13 @@ class Protect {
         
         let data = try await fetchJSON(from: url, headers: headers)
         let liveviews = try JSONDecoder().decode([Liveview].self, from: data)
-        _liveviews = liveviews
-        return liveviews
+        _liveviews = liveviews.sorted()
+        return _liveviews!
+    }
+    
+    func lookupLiveviewName(byId id: String) async throws -> String? {
+        let liveviews = try await getLiveviews()
+        return liveviews.first(where: { $0.id == id })?.name
     }
     
     func changeViewportView(on viewportId: String,to liveviewId: String) async throws {
