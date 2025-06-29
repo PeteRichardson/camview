@@ -58,12 +58,11 @@ You can get more data in csv format by specifying -c.
 
 
 Limitations:
-• Currently it uses only the first Viewport that the Protect API returns.
-• The default
+• camview changes the Liveview on only the *first* Viewport that the Protect API returns.
 
 Authentication:
 Camview requires a ~/.config/camview.json file with Unifi Protect API credentials.
-It must contain your Unifi Protect host IP or DNS name, and your API token.  Like this:
+It must contain your Unifi Protect host IP or DNS name, and your API key.  Like this:
 {
     "unifi" : {
         "protect" : {
@@ -78,7 +77,7 @@ It must contain your Unifi Protect host IP or DNS name, and your API token.  Lik
 )
 
 
-    @Argument(help: "Name of multi-view to switch to")
+    @Argument(help: "Name of Liveview to switch to")
     var view: String = "Default"
     
     @Flag(name: [.customShort("v"), .customLong("views")], help: "List Liveviews", )
