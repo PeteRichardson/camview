@@ -80,7 +80,8 @@ struct CamView : AsyncParsableCommand {
                 return
             }
         }
-        
+        print("# ERROR: \(view) not found.  Try one of the following view names:")
+        try await list(protect.getLiveviews())
     }
 }
 
