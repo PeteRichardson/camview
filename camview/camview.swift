@@ -43,9 +43,43 @@ func list<T: CustomCSVConvertible>(_ array: [T], csv: Bool = false) {
 
 @main
 struct CamView : AsyncParsableCommand {
+    static var configuration = CommandConfiguration(
+        abstract: "CLI to control a Unifi Protect Viewport.",
+        discussion: """
+You can switch to a Liveview by passing the Liveview name on the cmd line.
+Names are case-INsensitive.
+e.g.   camview Driveway
+
+If you don't give a Liveview name, it will try a view called "Default"
+
+You can list Viewports with -p and Liveviews with -v
+You'll get a summary view of names and ids.
+You can get more data in csv format by specifying -c.
+
+
+Limitations:
+• Currently it uses only the first Viewport that the Protect API returns.
+• The default
+
+Authentication:
+Camview requires a ~/.config/camview.json file with Unifi Protect API credentials.
+It must contain your Unifi Protect host IP or DNS name, and your API token.  Like this:
+{
+    "unifi" : {
+        "protect" : {
+            "api": {
+                "host": "192.168.1.1",
+                "apiKey": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+            }
+        }
+    }
+}
+"""
+)
+
 
     @Argument(help: "Name of multi-view to switch to")
-    var view: String = "Driveway"
+    var view: String = "Default"
     
     @Flag(name: [.customShort("v"), .customLong("views")], help: "List Liveviews", )
     var listviews: Bool = false
@@ -57,8 +91,11 @@ struct CamView : AsyncParsableCommand {
     var csv: Bool = false
 
     mutating func run() async throws {
-        let url = URL(fileURLWithPath: "/Users/pete/bin/config.json")
-        let data = try Data(contentsOf: url)
+        // find the config file
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let configFile = home.appendingPathComponent(".config").appendingPathComponent("camview.json")
+
+        let data = try Data(contentsOf: configFile.standardizedFileURL)
         let config = try JSONDecoder().decode(Config.self, from: data)
         let protect = Protect(host: config.unifi.protect.api.host, apiKey: config.unifi.protect.api.apiKey)
         
