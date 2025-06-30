@@ -18,7 +18,6 @@ struct Liveview: ProtectAPIObject {
     static let v1APIPath = "liveviews"
     
     var id: String
-    var modelKey: String
     var name: String
     var isDefault: Bool
     var isGlobal: Bool

@@ -12,18 +12,17 @@ struct Viewport: ProtectAPIObject {
 
     var id: String
     var liveview: String
-    var modelKey: String
     var name: String
     var state: String
     var streamLimit: Int
     
-    static var csvHeader : String = "name,id,liveview,modelKey,state,streamLimit"
+    static var csvHeader : String = "name,id,liveview,state,streamLimit"
 
     var description: String {
         "\(name.padded(to:17)) <\(id)> (viewing '\(liveview)')"
     }
     func csvDescription() -> String {
-        "\(name),\(id),\(liveview),\(modelKey),\(state),\(streamLimit)"
+        "\(name),\(id),\(liveview),\(state),\(streamLimit)"
     }
     
     static func < (lhs: Viewport, rhs: Viewport) -> Bool {
