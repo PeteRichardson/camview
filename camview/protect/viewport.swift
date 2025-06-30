@@ -7,7 +7,7 @@
 
 
 
-struct Viewport: Decodable, Comparable, CustomCSVConvertible {
+struct Viewport: ProtectAPIObject {
     static let v1APIPath = "viewers"
 
     var id: String

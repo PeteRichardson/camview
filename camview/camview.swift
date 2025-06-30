@@ -9,11 +9,6 @@ import Foundation
 import Logging
 import ArgumentParser
 
-protocol CustomCSVConvertible: CustomStringConvertible {
-    static var csvHeader: String { get }
-    func csvDescription() -> String
-}
-
 
 struct Config: Codable {
     struct ProtectAPI: Codable {
@@ -32,7 +27,7 @@ struct Config: Codable {
     let unifi: Unifi
 }
 
-func list<T: CustomCSVConvertible>(_ array: [T], csv: Bool = false) {
+func list<T: ProtectAPIObject>(_ array: [T], csv: Bool = false) {
     if csv {
         print(T.csvHeader)
     }

@@ -13,7 +13,7 @@ struct Slot: Decodable {
     var cycleInterval: Int
 }
 
-struct Liveview: Decodable, Comparable, CustomCSVConvertible {
+struct Liveview: ProtectAPIObject {
     
     static let v1APIPath = "liveviews"
     
