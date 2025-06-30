@@ -8,7 +8,8 @@
 
 
 struct Viewport: Decodable, Comparable, CustomCSVConvertible {
-    
+    static let v1APIPath = "viewers"
+
     var id: String
     var liveview: String
     var modelKey: String

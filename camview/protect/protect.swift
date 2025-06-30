@@ -53,7 +53,7 @@ actor Protect {
         if let cached = _viewports {
             return cached
         }
-        let url = URL(string: "\(baseAPIUrlv1)/viewers")!
+        let url = URL(string: "\(baseAPIUrlv1)/\(Viewport.v1APIPath)")!
         
         let data = try await fetchJSON(from: url, headers: headers)
         let viewports = try JSONDecoder().decode([Viewport].self, from: data)
@@ -77,7 +77,7 @@ actor Protect {
         if let cached = _liveviews {
             return cached
         }
-        let url = URL(string: "\(baseAPIUrlv1)/liveviews")!
+        let url = URL(string: "\(baseAPIUrlv1)/\(Liveview.v1APIPath)")!
         
         let data = try await fetchJSON(from: url, headers: headers)
         let liveviews = try JSONDecoder().decode([Liveview].self, from: data)

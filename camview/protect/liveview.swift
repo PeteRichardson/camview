@@ -15,6 +15,8 @@ struct Slot: Decodable {
 
 struct Liveview: Decodable, Comparable, CustomCSVConvertible {
     
+    static let v1APIPath = "liveviews"
+    
     var id: String
     var modelKey: String
     var name: String
