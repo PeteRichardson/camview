@@ -28,82 +28,19 @@ func fetchJSON(from url: URL, headers: [String: String]) async throws -> Data {
 }
 
 
-struct Viewport: Decodable, Comparable, CustomCSVConvertible {
-    
-    var id: String
-    var liveview: String
-    var modelKey: String
-    var name: String
-    var state: String
-    var streamLimit: Int
-    
-    static var csvHeader : String = "name,id,liveview,modelKey,state,streamLimit"
-
-    var description: String {
-        "\(name.padded(to:17)) <\(id)> (viewing '\(liveview)')"
-    }
-    func csvDescription() -> String {
-        "\(name),\(id),\(liveview),\(modelKey),\(state),\(streamLimit)"
-    }
-    
-    static func < (lhs: Viewport, rhs: Viewport) -> Bool {
-        return lhs.name < rhs.name
-    }
-    static func == (lhs: Viewport, rhs: Viewport) -> Bool {
-        lhs.name == rhs.name
-    }
-    
-}
-
-struct Slot: Decodable {
-    var cameras: [String]
-    var cycleMode: String
-    var cycleInterval: Int
-}
-
-struct Liveview: Decodable, Comparable, CustomCSVConvertible {
-    
-    var id: String
-    var modelKey: String
-    var name: String
-    var isDefault: Bool
-    var isGlobal: Bool
-    var owner: String
-    var layout: Int
-    var slots: [Slot]
-
-    static var csvHeader : String = "name,id,isDefault,isGlobal,owner,layout"
-
-    var description: String {
-        "\(name.padded(to:17)) <\(id)> \(isDefault ? "(default)" : "")"
-    }
-    
-    func csvDescription() -> String {
-        "\(name),\(id),\(isDefault),\(isGlobal),\(owner),\(layout)"
-    }
-    
-    static func < (lhs: Liveview, rhs: Liveview) -> Bool {
-        return lhs.name < rhs.name
-    }
-    static func == (lhs: Liveview, rhs: Liveview) -> Bool {
-        lhs.name == rhs.name
-    }
-}
-
-
 actor Protect {
     private var _viewports: [Viewport]?
     private var _liveviews: [Liveview]?
     
     private let host: String
     private let apiKey: String
-    private var baseAPIUrl: String
+    private var baseAPIUrlv1: String
     private var headers: [String: String] = [:]
     
     init(host: String, apiKey: String) {
         self.host = host
         self.apiKey = apiKey
-        self.baseAPIUrl = "https://\(host)/proxy/protect/integration"
+        self.baseAPIUrlv1 = "https://\(host)/proxy/protect/integration/v1"
         self.headers = [
             "X-API-KEY": self.apiKey,
             "Content-Type": "application/json",
@@ -116,7 +53,7 @@ actor Protect {
         if let cached = _viewports {
             return cached
         }
-        let url = URL(string: "\(baseAPIUrl)/v1/viewers")!
+        let url = URL(string: "\(baseAPIUrlv1)/viewers")!
         
         let data = try await fetchJSON(from: url, headers: headers)
         let viewports = try JSONDecoder().decode([Viewport].self, from: data)
@@ -140,7 +77,7 @@ actor Protect {
         if let cached = _liveviews {
             return cached
         }
-        let url = URL(string: "\(baseAPIUrl)/v1/liveviews")!
+        let url = URL(string: "\(baseAPIUrlv1)/liveviews")!
         
         let data = try await fetchJSON(from: url, headers: headers)
         let liveviews = try JSONDecoder().decode([Liveview].self, from: data)
@@ -154,7 +91,7 @@ actor Protect {
     }
     
     func changeViewportView(on viewportId: String,to liveviewId: String) async throws {
-        let url = URL(string: "\(baseAPIUrl)/v1/viewers/\(viewportId)")!
+        let url = URL(string: "\(baseAPIUrlv1)/viewers/\(viewportId)")!
         
         var request = URLRequest(url: url)
         request.httpMethod = "PATCH"
