@@ -27,22 +27,9 @@
 		C1711B3A2E0B47CB00ACD8FE /* camview */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = camview; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
-		C1711B4F2E0B56BD00ACD8FE /* Exceptions for "camview" folder in "Copy Files" phase from "camview" target */ = {
-			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
-			buildPhase = C1711B382E0B47CB00ACD8FE /* CopyFiles */;
-			membershipExceptions = (
-				config.json,
-			);
-		};
-/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		C1711B3C2E0B47CB00ACD8FE /* camview */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				C1711B4F2E0B56BD00ACD8FE /* Exceptions for "camview" folder in "Copy Files" phase from "camview" target */,
-			);
 			path = camview;
 			sourceTree = "<group>";
 		};
