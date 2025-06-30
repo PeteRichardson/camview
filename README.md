@@ -2,11 +2,11 @@
 
 ### Features
 * switch Liveviews
-* list Viewports or Liveviews
+* list Viewports, Liveviews, or Cameras
 
 ### Usage
 ```
-USAGE: cam-view [<view>] [--views] [--ports] [--csv]
+USAGE: camview [<view>] [-v|--views] [-p|--ports] [-c|--cameras] [--csv]
 
 ARGUMENTS:
 <view>                  Name of Liveview to switch to (default: Default)
@@ -14,7 +14,8 @@ ARGUMENTS:
 OPTIONS:
 -v, --views             List Liveviews
 -p, --ports             List Viewports
--c, --csv               List items as CSV
+-c, --cameras           List Cameras
+--csv                   List items as CSV
 -h, --help              Show help information.
 ```
 
@@ -34,7 +35,8 @@ returned by the Protect API.   This will be fixed in a future version.
 #### Listing Viewports and Liveviews
 * You can list available Viewports with `camview -p`
 * You can list available Liveviews with `camview -v`
-* You can get more data in csv format by adding `-c`.  e.g.  `camview -v -c`
+* You can list available Cameras with `camview -c`
+* You can get more data in csv format by adding `--csv`.  e.g.  `camview -v --csv`
 
 ### Authentication:
 Camview requires a ~/.config/camview.json file with Unifi Protect API credentials.

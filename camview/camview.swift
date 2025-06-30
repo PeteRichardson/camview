@@ -52,10 +52,11 @@ If you don't give a Liveview name, it will try a view called "Default"
 NOTE: Currently, camview changes the liveview on only the *first* Viewport
 returned by the Protect API.   This will be fixed in a future version.
 
-LISTING VIEWPORTS AND LIVEVIEWS:
+LISTING VIEWPORTS, LIVEVIEWS AND CAMERAS:
 * You can list available Viewports with `camview -p`
 * You can list available Liveviews with `camview -v`
-* You can get more data in csv format by adding `-c`.  e.g.  `camview -v -c`
+* You can list available Cameras with `camview -c`
+* You can get more data in csv format by adding `--csv`.  e.g.  `camview -v --csv`
 
 
 AUTHENTICATION:
