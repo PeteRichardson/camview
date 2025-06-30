@@ -31,7 +31,8 @@ func fetchJSON(from url: URL, headers: [String: String]) async throws -> Data {
 actor Protect {
     private var _viewports: [Viewport]?
     private var _liveviews: [Liveview]?
-    
+    private var _cameras: [Camera]?
+
     private let host: String
     private let apiKey: String
     private var baseAPIUrlv1: String
@@ -83,6 +84,18 @@ actor Protect {
         let liveviews = try JSONDecoder().decode([Liveview].self, from: data)
         _liveviews = liveviews.sorted()
         return _liveviews!
+    }
+    
+    func getCameras() async throws -> [Camera] {
+        if let cached = _cameras {
+            return cached
+        }
+        let url = URL(string: "\(baseAPIUrlv1)/\(Camera.v1APIPath)")!
+        
+        let data = try await fetchJSON(from: url, headers: headers)
+        let cameras = try JSONDecoder().decode([Camera].self, from: data)
+        _cameras = cameras.sorted()
+        return _cameras!
     }
     
     func lookupLiveviewName(byId id: String) async throws -> String? {

@@ -83,8 +83,11 @@ It must contain your Unifi Protect host IP or DNS name, and your API key.  Like 
 
     @Flag(name: [.customShort("p"), .customLong("ports")], help: "List Viewports", )
     var listports: Bool = false
+    
+    @Flag(name: [.customShort("c"), .customLong("cameras")], help: "List Cameras", )
+    var listcameras: Bool = false
 
-    @Flag(name: [.customShort("c"), .customLong("csv")], help: "List items as CSV", )
+    @Flag(help: "List items as CSV", )
     var csv: Bool = false
 
     mutating func run() async throws {
@@ -103,6 +106,12 @@ It must contain your Unifi Protect host IP or DNS name, and your API key.  Like 
 
         if listports {
             try await list(protect.getViewports(), csv: csv)
+            return
+        }
+
+        
+        if listcameras {
+            try await list(protect.getCameras(), csv: csv)
             return
         }
         
