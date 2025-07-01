@@ -5,7 +5,7 @@
 //  Created by Peter Richardson on 6/30/25.
 //
 
-
+import Foundation
 
 struct Slot: Decodable {
     var cameras: [String]
@@ -42,3 +42,5 @@ struct Liveview: ProtectAPIObject {
         lhs.name == rhs.name
     }
 }
+
+

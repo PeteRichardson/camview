@@ -7,11 +7,12 @@
 
 import Foundation
 import Logging
+import AppKit
 
 var logger = Logger(label: "protect")
 
 
-func fetchJSON(from url: URL, headers: [String: String]) async throws -> Data {
+func fetch(from url: URL, headers: [String: String]) async throws -> Data {
     var request = URLRequest(url: url)
     headers.forEach { key, value in
         request.setValue(value, forHTTPHeaderField: key)
@@ -49,6 +50,18 @@ actor Protect {
         ]
     }
     
+    func getLiveviews() async throws -> [Liveview] {
+        if let cached = _liveviews {
+            return cached
+        }
+        let url = URL(string: "\(baseAPIUrlv1)/\(Liveview.v1APIPath)")!
+        
+        let data = try await fetch(from: url, headers: headers)
+        let liveviews = try JSONDecoder().decode([Liveview].self, from: data)
+        _liveviews = liveviews.sorted()
+        return _liveviews!
+    }
+
     
     func getViewports() async throws -> [Viewport] {
         if let cached = _viewports {
@@ -56,7 +69,7 @@ actor Protect {
         }
         let url = URL(string: "\(baseAPIUrlv1)/\(Viewport.v1APIPath)")!
         
-        let data = try await fetchJSON(from: url, headers: headers)
+        let data = try await fetch(from: url, headers: headers)
         let viewports = try JSONDecoder().decode([Viewport].self, from: data)
         
         // Now that we have the list of viewports, we can lookup the currently
@@ -74,33 +87,40 @@ actor Protect {
         return _viewports!
     }
     
-    func getLiveviews() async throws -> [Liveview] {
-        if let cached = _liveviews {
-            return cached
-        }
-        let url = URL(string: "\(baseAPIUrlv1)/\(Liveview.v1APIPath)")!
-        
-        let data = try await fetchJSON(from: url, headers: headers)
-        let liveviews = try JSONDecoder().decode([Liveview].self, from: data)
-        _liveviews = liveviews.sorted()
-        return _liveviews!
-    }
-    
+
     func getCameras() async throws -> [Camera] {
         if let cached = _cameras {
             return cached
         }
         let url = URL(string: "\(baseAPIUrlv1)/\(Camera.v1APIPath)")!
         
-        let data = try await fetchJSON(from: url, headers: headers)
+        let data = try await fetch(from: url, headers: headers)
         let cameras = try JSONDecoder().decode([Camera].self, from: data)
         _cameras = cameras.sorted()
         return _cameras!
     }
     
+    func getSnapshot(from camera: String, with quality: Bool) async throws -> Data {
+        // use {{base_url}}/cameras/<camera_id>/snapshot
+        // and accept = image/jpeg
+        // and highQuailty = true | false
+        
+        guard let camera_id = try await lookupCameraId(byName: camera) else {
+            throw NSError(domain: "Protect", code: 1001, userInfo: [NSLocalizedDescriptionKey : "Camera not found"])
+        }
+        let url = URL(string: "\(baseAPIUrlv1)/\(Camera.v1APIPath)/\(camera_id)/snapshot")!
+        let imageData = try await fetch(from: url, headers: headers)
+        return imageData
+    }
+    
     func lookupLiveviewName(byId id: String) async throws -> String? {
         let liveviews = try await getLiveviews()
         return liveviews.first(where: { $0.id == id })?.name
+    }
+    
+    func lookupCameraId(byName name: String) async throws -> String? {
+        let cameras = try await getCameras()
+        return cameras.first(where: { $0.name.lowercased() == name.lowercased() })?.id
     }
     
     func changeViewportView(on viewportId: String,to liveviewId: String) async throws {
