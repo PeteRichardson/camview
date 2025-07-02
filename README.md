@@ -6,37 +6,35 @@
 
 ### Usage
 ```
-USAGE: camview [<view>] [-v|--views] [-p|--ports] [-c|--cameras] [--csv]
-
-ARGUMENTS:
-<view>                  Name of Liveview to switch to (default: Default)
+USAGE: cam-view <subcommand>
 
 OPTIONS:
--v, --views             List Liveviews
--p, --ports             List Viewports
--c, --cameras           List Cameras
---csv                   List items as CSV
--h, --help              Show help information.
+  -h, --help              Show help information.
+
+SUBCOMMANDS:
+  list                    Show a list of liveviews, viewports or cameras
+  show                    Set a Liveview for a Viewport
+  snapshot                Capture a snapshot of a camera's current view
+  config                  Manage tool configuration (protect host, api key) and defaults
 ```
 
 #### Switching Liveviews:
+SWITCHING LIVEVIEWS:
 You can switch to an available Liveview by passing the Liveview name on the cmd line.
 Names are case-INsensitive.
+e.g.
+camview show Driveway
 
-```
-camview Driveway
-```
-
-If you don't give a Liveview name, it will try a view called "Default"
+If you don't pass in a Liveview name, it will try a liveview called "Default"
 
 NOTE: Currently, camview changes the liveview on only the *first* Viewport
 returned by the Protect API.   This will be fixed in a future version.
 
-#### Listing Viewports and Liveviews
-* You can list available Viewports with `camview -p`
-* You can list available Liveviews with `camview -v`
-* You can list available Cameras with `camview -c`
-* You can get more data in csv format by adding `--csv`.  e.g.  `camview -v --csv`
+#### Listing Viewports, Liveviews and Cameras:
+* You can list available Viewports with `camview list viewports`
+* You can list available Liveviews with `camview list liveviews` (or just `camview list`)
+* You can list available Cameras with `camview list cameras`
+* You can get more data in csv format by adding `-f csv`.  e.g.  `camview list cameras -f csv`
 
 ### Authentication:
 Camview requires a ~/.config/camview.json file with Unifi Protect API credentials.
@@ -53,3 +51,6 @@ It must contain your Unifi Protect host IP or DNS name, and your API token.  Lik
 	}
 }
 ```
+
+### Elgato Stream Deck
+To change the live view on your Viewport by pushing a button on an Elgato Stream Deck, you can wrap the cli "camview show" call in a mac app using Automator.   Or, you can use the code in the Streamdeck Extras folder to quickly generate smaller, faster apps.   For more info, see [this readme](streamdeck%20extras/README.md).
