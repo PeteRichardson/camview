@@ -16,5 +16,5 @@ There's script (build.nu) in nushell (sorry) to help build multiple apps from a 
 #### Other notes:
 * The build.nu script nests each binary in a <LiveviewName>.app/Contents/MacOS folder hierarchy to stop the finder and StreamDesk from launching a terminal window.
 * One improvement would be to have build.nu use camview to dynamically get the current list of Liveviews and generate an app for each one, instead of having a hardcoded list.
-* To get nice images for your streamdeck buttons, take a snapshot from your camera, crop it to a square, reduce it to 72x72 and black out the bottom 72 rows of pixels so the button title shows up nicely.
+* To get nice images for your streamdeck buttons, take a snapshot from your camera, crop it to a square, reduce it to 72x72 and black out the bottom 20 rows of pixels so the button title shows up nicely.
 * If you do use Automator instead of these little launcher apps, it's pretty easy to edit the Contents/document.wflow file to change the command line.
