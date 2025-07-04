@@ -29,7 +29,7 @@ func fetch(from url: URL, headers: [String: String]) async throws -> Data {
 }
 
 
-actor Protect {
+actor ProtectService {
     private var _viewports: [Viewport]?
     private var _liveviews: [Liveview]?
     private var _cameras: [Camera]?
@@ -106,7 +106,7 @@ actor Protect {
         // and highQuailty = true | false
         
         guard let camera_id = try await lookupCameraId(byName: camera) else {
-            throw NSError(domain: "Protect", code: 1001, userInfo: [NSLocalizedDescriptionKey : "Camera not found"])
+            throw NSError(domain: "ProtectServce", code: 1001, userInfo: [NSLocalizedDescriptionKey : "Camera not found"])
         }
         let url = URL(string: "\(baseAPIUrlv1)/\(Camera.v1APIPath)/\(camera_id)/snapshot")!
         let imageData = try await fetch(from: url, headers: headers)

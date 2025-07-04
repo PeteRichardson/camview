@@ -40,7 +40,7 @@ struct Snapshot: AsyncParsableCommand {
             throw FileNotFoundError(path: "~/.config/camview.json")
         }
         
-        let protect = Protect(host: config.unifi.protect.api.host, apiKey: config.unifi.protect.api.apiKey)
+        let protect = ProtectService(host: config.unifi.protect.api.host, apiKey: config.unifi.protect.api.apiKey)
         let imagedata = try await protect.getSnapshot(from: camera, with: highQuality)
         showImageInITerm2(data: imagedata)
     }
