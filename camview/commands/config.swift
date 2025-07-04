@@ -7,7 +7,7 @@
 
 import Foundation
 import ArgumentParser
-
+import Security
 
 
 struct ConfigInit: AsyncParsableCommand {
@@ -24,11 +24,14 @@ struct ConfigInit: AsyncParsableCommand {
 struct ConfigSet: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "set",
-        abstract: "Set tool configuration (protect host, api key) and defaults",
+        abstract: "Set api key in Keychain",
     )
     
+    @Option(name: .shortAndLong, help: "The configuration value to set")
+    var protectAPIKey: String
+    
     func run() async throws {
-        print("# TODO: update one of the config values, esp. default viewport")
+        try Keychain.SaveApiKey(protectAPIKey)
     }
 }
 
@@ -36,11 +39,16 @@ struct ConfigSet: AsyncParsableCommand {
 struct ConfigDump: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "dump",
-        abstract: "Dump tool configuration (protect host, api key) and defaults",
+        abstract: "Dump obfuscated api key from Keychain",
     )
     
     func run() async throws {
-        print("# TODO:  Dump Config.   Make sure to obfuscate the API Key")
+        do {
+            let apiKey = try Keychain.LoadApiKey()
+            print("protect-api-key: \(apiKey.prefix(6))....................\(apiKey.suffix(6))")
+        } catch {
+            print("Could not protect-api-key from Keychain: \(error)")
+        }
     }
 }
 
@@ -49,25 +57,30 @@ struct Config: AsyncParsableCommand {
         abstract: "Manage tool configuration (protect host, api key) and defaults",
         subcommands: [ConfigSet.self, ConfigInit.self, ConfigDump.self],
         defaultSubcommand: ConfigDump.self // optional: default to `dump` if no subcommand given
-
     )
 }
 
 struct Configuration: Codable {
+    
     struct ProtectAPI: Codable {
         let host: String
-        let apiKey: String
+        var apiKey: String = ""
+        
+        enum CodingKeys: String, CodingKey {
+                case host
+                // Do NOT include `apiKey` here.  That will be populated from the Keychain.
+            }
     }
 
     struct Protect: Codable {
-        let api: ProtectAPI
+        var api: ProtectAPI
     }
 
     struct Unifi: Codable {
-        let protect: Protect
+        var protect: Protect
     }
 
-    let unifi: Unifi
+    var unifi: Unifi
     
     static var filepath: URL {
         return FileManager.default.homeDirectoryForCurrentUser
@@ -83,8 +96,54 @@ struct Configuration: Codable {
         do {
             let data = try Data(contentsOf: fileURL.standardizedFileURL)
             self = try JSONDecoder().decode(Configuration.self, from: data)
+            self.unifi.protect.api.apiKey = try Keychain.LoadApiKey()
         } catch  {
             return nil
         }
+    }
+}
+
+
+enum Keychain {
+    static let account = "protect-api-key"   // the name of a single stored item.  (the key in the key-value pair)
+    static let service = "com.peterichardson.camview"
+    
+    static func SaveApiKey(_ value: String) throws {
+        let data = value.data(using: .utf8)!
+        
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock,
+        ]
+        
+        SecItemDelete(query as CFDictionary)
+        
+        let status = SecItemAdd(query as CFDictionary, nil)
+        guard status == errSecSuccess else {
+            throw NSError(domain: "Keychain", code: Int(status), userInfo: [NSLocalizedDescriptionKey: "Unable to save API key"])
+        }
+    }
+    
+    static func LoadApiKey() throws -> String {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+        
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        
+        guard status == errSecSuccess,
+              let data = result as? Data,
+              let key = String(data: data, encoding: .utf8) else {
+            throw NSError(domain: "Keychain", code: Int(status), userInfo: [NSLocalizedDescriptionKey: "API key not found in Keychain"])
+        }
+        return key
     }
 }
