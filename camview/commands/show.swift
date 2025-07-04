@@ -27,15 +27,15 @@ struct Show: AsyncParsableCommand {
         
         let protect = ProtectService(host: config.unifi.protect.api.host, apiKey: config.unifi.protect.api.apiKey)
 
-        let viewportId = try await protect.getViewports().first!.id
+        let viewportId = try await protect.viewports().first!.id
         let lcView = liveview.lowercased()
-        for liveview in try await protect.getLiveviews() {
+        for liveview in try await protect.liveviews() {
             if liveview.name.lowercased() == lcView {
                 try await protect.changeViewportView(on: viewportId, to: liveview.id)
                 return
             }
         }
         print("# ERROR: \(liveview) not found.  Try one of the following view names:")
-        try await list(protect.getLiveviews())
+        try await list(protect.liveviews())
     }
 }

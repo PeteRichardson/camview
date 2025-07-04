@@ -5,9 +5,9 @@
 //  Created by Peter Richardson on 6/30/25.
 //
 
-struct Camera: ProtectAPIObject {
-    
-    static let v1APIPath = "cameras"
+struct Camera: ProtectFetchable {    
+    //static let v1APIPath = "cameras"
+    static let urlSuffix = "cameras"
     
     var id: String
     var state: String
@@ -35,12 +35,5 @@ struct Camera: ProtectAPIObject {
     
     func csvDescription() -> String {
         "\(name),\(id),\(state),\(isMicEnabled),\(micVolume),\(videoMode),\(hdrType)"
-    }
-    
-    static func < (lhs: Camera, rhs: Camera) -> Bool {
-        return lhs.name < rhs.name
-    }
-    static func == (lhs: Camera, rhs: Camera) -> Bool {
-        lhs.name == rhs.name
     }
 }

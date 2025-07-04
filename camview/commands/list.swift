@@ -19,7 +19,7 @@ extension FileNotFoundError: LocalizedError {
 }
 
 
-func list<T: ProtectAPIObject>(_ array: [T], format: String = "summary") {
+func list<T: ProtectFetchable>(_ array: [T], format: String = "summary") {
     var desc: String
     
     // HEADER
@@ -63,11 +63,11 @@ struct List: AsyncParsableCommand {
 
         switch object.lowercased() {
         case "liveviews":
-            try await list(protect.getLiveviews(), format: format)
+            try await list(protect.liveviews(), format: format)
         case "viewports":
-            try await list(protect.getViewports(), format: format)
+            try await list(protect.viewports(), format: format)
         case "cameras":
-            try await list(protect.getCameras(), format: format)
+            try await list(protect.cameras(), format: format)
         default:
             throw ValidationError("Invalid object type: \(object). Use one of: liveviews, viewports, cameras.")
         }

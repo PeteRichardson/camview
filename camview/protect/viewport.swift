@@ -7,8 +7,9 @@
 
 
 
-struct Viewport: ProtectAPIObject {
-    static let v1APIPath = "viewers"
+struct Viewport: ProtectFetchable {
+    //static let v1APIPath = "viewers"
+    static let urlSuffix = "viewers"
 
     var id: String
     var liveview: String
@@ -24,12 +25,4 @@ struct Viewport: ProtectAPIObject {
     func csvDescription() -> String {
         "\(name),\(id),\(liveview),\(state),\(streamLimit)"
     }
-    
-    static func < (lhs: Viewport, rhs: Viewport) -> Bool {
-        return lhs.name < rhs.name
-    }
-    static func == (lhs: Viewport, rhs: Viewport) -> Bool {
-        lhs.name == rhs.name
-    }
-    
 }

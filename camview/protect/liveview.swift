@@ -13,9 +13,10 @@ struct Slot: Decodable {
     var cycleInterval: Int
 }
 
-struct Liveview: ProtectAPIObject {
+struct Liveview: ProtectFetchable {
     
-    static let v1APIPath = "liveviews"
+    //static let v1APIPath = "liveviews"
+    static let urlSuffix = "liveviews"
     
     var id: String
     var name: String
@@ -33,13 +34,6 @@ struct Liveview: ProtectAPIObject {
     
     func csvDescription() -> String {
         "\(name),\(id),\(isDefault),\(isGlobal),\(owner),\(layout)"
-    }
-    
-    static func < (lhs: Liveview, rhs: Liveview) -> Bool {
-        return lhs.name < rhs.name
-    }
-    static func == (lhs: Liveview, rhs: Liveview) -> Bool {
-        lhs.name == rhs.name
     }
 }
 

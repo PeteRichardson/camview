@@ -11,6 +11,11 @@ import AppKit
 
 var logger = Logger(label: "protect")
 
+enum MIMEType: String {
+    case json = "application/json"
+    case jpeg = "application/jpeg"
+}
+
 
 func fetch(from url: URL, headers: [String: String]) async throws -> Data {
     var request = URLRequest(url: url)
@@ -29,75 +34,73 @@ func fetch(from url: URL, headers: [String: String]) async throws -> Data {
 }
 
 
-actor ProtectService {
+class ProtectService {
     private var cachedCameras: [Camera]? = nil         // cache the camera values
     private var cachedLiveviews: [Liveview]? = nil     // cache the liveview values
     private var cachedViewports: [Viewport]? = nil     // cache the viewport values
 
     private let host: String
     private let apiKey: String
-    private var baseAPIUrlv1: String
+    var base_url: URL {
+        URL(string: "http://\(host)/proxy/protect/integration/v1")!
+    }
     private var headers: [String: String] = [:]
     
     init(host: String, apiKey: String) {
         self.host = host
         self.apiKey = apiKey
-        self.baseAPIUrlv1 = "https://\(host)/proxy/protect/integration/v1"
         self.headers = [
             "X-API-KEY": self.apiKey,
             "Content-Type": "application/json",
             "Accept": "application/json"
         ]
     }
-    
-    func getLiveviews() async throws -> [Liveview] {
-        if let cached = cachedLiveviews {
-            return cached
-        }
-        let url = URL(string: "\(baseAPIUrlv1)/\(Liveview.v1APIPath)")!
-        
-        let data = try await fetch(from: url, headers: headers)
-        let liveviews = try JSONDecoder().decode([Liveview].self, from: data)
-        cachedLiveviews = liveviews.sorted()
-        return cachedLiveviews!
+    func cameras() async throws -> [Camera] {
+        try await fetchAndCache(cache: &cachedCameras)
     }
 
-    
-    func getViewports() async throws -> [Viewport] {
-        if let cached = cachedViewports {
-            return cached
-        }
-        let url = URL(string: "\(baseAPIUrlv1)/\(Viewport.v1APIPath)")!
-        
-        let data = try await fetch(from: url, headers: headers)
-        let viewports = try JSONDecoder().decode([Viewport].self, from: data)
-        
-        // Now that we have the list of viewports, we can lookup the currently
-        // visible Liveview (we have its id) and get the name, which is
-        // easier for the users to understand.
-        // Viewport is a struct, so we can't modify them.  We have to copy.
-        // Need asyncMap extension on Array for this to work.
-        let updatedViewports = try await viewports.asyncMap { viewport in
-            var copy = viewport
-            copy.liveview = try await self.lookupLiveviewName(byId: viewport.liveview)!
-            return copy
-        }
-        cachedViewports = updatedViewports.sorted()
-        
-        return cachedViewports!
+    func liveviews() async throws -> [Liveview] {
+        try await fetchAndCache(cache: &cachedLiveviews)
+    }
+
+    func viewports() async throws -> [Viewport] {
+        try await fetchAndCache(cache: &cachedViewports)
     }
     
-
-    func getCameras() async throws -> [Camera] {
-        if let cached = cachedCameras {
+    private func fetchAndCache<T: ProtectFetchable>(cache: inout [T]?) async throws -> [T] {
+        if let cached = cache {
             return cached
         }
-        let url = URL(string: "\(baseAPIUrlv1)/\(Camera.v1APIPath)")!
+        let data = try await fetchData(for: T.urlSuffix, accepting: .json)
+        cache = try T.parse(data)
+        return cache!
+    }
+    
+    func fetchData(for path: String, accepting mimetype: MIMEType = .json) async throws -> Data {
+        let url = base_url.appendingPathComponent(path)
+        var request = URLRequest(url: url)
+        let apiKey = try Keychain.LoadApiKey()
+        request.setValue(apiKey, forHTTPHeaderField: "X-API-KEY")
+        request.setValue(mimetype.rawValue, forHTTPHeaderField: "accepts")
         
-        let data = try await fetch(from: url, headers: headers)
-        let cameras = try JSONDecoder().decode([Camera].self, from: data)
-        cachedCameras = cameras.sorted()
-        return cachedCameras!
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try validateResponse(response)
+         
+        return data
+    }
+    
+    func validateResponse(_ response: URLResponse) throws {
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw NSError(
+                domain: "ProtectService",
+                code: httpResponse.statusCode,
+                userInfo: [NSLocalizedDescriptionKey: HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode)]
+            )
+        }
     }
     
     func getSnapshot(from camera: String, with quality: Bool) async throws -> Data {
@@ -108,24 +111,23 @@ actor ProtectService {
         guard let camera_id = try await lookupCameraId(byName: camera) else {
             throw NSError(domain: "ProtectServce", code: 1001, userInfo: [NSLocalizedDescriptionKey : "Camera not found"])
         }
-        let url = URL(string: "\(baseAPIUrlv1)/\(Camera.v1APIPath)/\(camera_id)/snapshot")!
+        let url = base_url.appendingPathComponent(String(format: "/cameras/%@/snapshot", camera_id))
         let imageData = try await fetch(from: url, headers: headers)
         return imageData
     }
     
     func lookupLiveviewName(byId id: String) async throws -> String? {
-        let liveviews = try await getLiveviews()
+        let liveviews = try await liveviews()
         return liveviews.first(where: { $0.id == id })?.name
     }
     
     func lookupCameraId(byName name: String) async throws -> String? {
-        let cameras = try await getCameras()
+        let cameras = try await cameras()
         return cameras.first(where: { $0.name.lowercased() == name.lowercased() })?.id
     }
     
     func changeViewportView(on viewportId: String,to liveviewId: String) async throws {
-        let url = URL(string: "\(baseAPIUrlv1)/viewers/\(viewportId)")!
-        
+        let url = base_url.appendingPathComponent(String(format: "/viewers/%@", viewportId))
         var request = URLRequest(url: url)
         request.httpMethod = "PATCH"
         headers.forEach { key, value in
