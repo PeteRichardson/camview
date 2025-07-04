@@ -30,9 +30,9 @@ func fetch(from url: URL, headers: [String: String]) async throws -> Data {
 
 
 actor ProtectService {
-    private var _viewports: [Viewport]?
-    private var _liveviews: [Liveview]?
-    private var _cameras: [Camera]?
+    private var cachedCameras: [Camera]? = nil         // cache the camera values
+    private var cachedLiveviews: [Liveview]? = nil     // cache the liveview values
+    private var cachedViewports: [Viewport]? = nil     // cache the viewport values
 
     private let host: String
     private let apiKey: String
@@ -51,20 +51,20 @@ actor ProtectService {
     }
     
     func getLiveviews() async throws -> [Liveview] {
-        if let cached = _liveviews {
+        if let cached = cachedLiveviews {
             return cached
         }
         let url = URL(string: "\(baseAPIUrlv1)/\(Liveview.v1APIPath)")!
         
         let data = try await fetch(from: url, headers: headers)
         let liveviews = try JSONDecoder().decode([Liveview].self, from: data)
-        _liveviews = liveviews.sorted()
-        return _liveviews!
+        cachedLiveviews = liveviews.sorted()
+        return cachedLiveviews!
     }
 
     
     func getViewports() async throws -> [Viewport] {
-        if let cached = _viewports {
+        if let cached = cachedViewports {
             return cached
         }
         let url = URL(string: "\(baseAPIUrlv1)/\(Viewport.v1APIPath)")!
@@ -82,22 +82,22 @@ actor ProtectService {
             copy.liveview = try await self.lookupLiveviewName(byId: viewport.liveview)!
             return copy
         }
-        _viewports = updatedViewports.sorted()
+        cachedViewports = updatedViewports.sorted()
         
-        return _viewports!
+        return cachedViewports!
     }
     
 
     func getCameras() async throws -> [Camera] {
-        if let cached = _cameras {
+        if let cached = cachedCameras {
             return cached
         }
         let url = URL(string: "\(baseAPIUrlv1)/\(Camera.v1APIPath)")!
         
         let data = try await fetch(from: url, headers: headers)
         let cameras = try JSONDecoder().decode([Camera].self, from: data)
-        _cameras = cameras.sorted()
-        return _cameras!
+        cachedCameras = cameras.sorted()
+        return cachedCameras!
     }
     
     func getSnapshot(from camera: String, with quality: Bool) async throws -> Data {
