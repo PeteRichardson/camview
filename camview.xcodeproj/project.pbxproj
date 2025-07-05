@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		C1711B462E0B487000ACD8FE /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = C1711B452E0B487000ACD8FE /* Logging */; };
 		C1711B492E0B488000ACD8FE /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = C1711B482E0B488000ACD8FE /* ArgumentParser */; };
+		C1FD703E2E18A2E50001B498 /* Logging in Frameworks */ = {isa = PBXBuildFile; productRef = C1FD703D2E18A2E50001B498 /* Logging */; };
+		C1FD70402E18A2F10001B498 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = C1FD703F2E18A2F10001B498 /* ArgumentParser */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,12 +27,37 @@
 
 /* Begin PBXFileReference section */
 		C1711B3A2E0B47CB00ACD8FE /* camview */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = camview; sourceTree = BUILT_PRODUCTS_DIR; };
+		C1FD70262E189DD10001B498 /* camgui.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = camgui.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C1FD70332E189DFC0001B498 /* Exceptions for "camview" folder in "camgui" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				commands/config.swift,
+				extensions.swift,
+				protect/camera.swift,
+				protect/liveview.swift,
+				protect/protect.swift,
+				protect/protocols.swift,
+				protect/viewport.swift,
+			);
+			target = C1FD70252E189DD10001B498 /* camgui */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		C1711B3C2E0B47CB00ACD8FE /* camview */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C1FD70332E189DFC0001B498 /* Exceptions for "camview" folder in "camgui" target */,
+			);
 			path = camview;
+			sourceTree = "<group>";
+		};
+		C1FD70272E189DD10001B498 /* camgui */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = camgui;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -45,6 +72,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C1FD70232E189DD10001B498 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C1FD70402E18A2F10001B498 /* ArgumentParser in Frameworks */,
+				C1FD703E2E18A2E50001B498 /* Logging in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -52,6 +88,8 @@
 			isa = PBXGroup;
 			children = (
 				C1711B3C2E0B47CB00ACD8FE /* camview */,
+				C1FD70272E189DD10001B498 /* camgui */,
+				C1FD703C2E18A2E50001B498 /* Frameworks */,
 				C1711B3B2E0B47CB00ACD8FE /* Products */,
 			);
 			sourceTree = "<group>";
@@ -60,8 +98,16 @@
 			isa = PBXGroup;
 			children = (
 				C1711B3A2E0B47CB00ACD8FE /* camview */,
+				C1FD70262E189DD10001B498 /* camgui.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		C1FD703C2E18A2E50001B498 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -91,6 +137,30 @@
 			productReference = C1711B3A2E0B47CB00ACD8FE /* camview */;
 			productType = "com.apple.product-type.tool";
 		};
+		C1FD70252E189DD10001B498 /* camgui */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C1FD70312E189DD20001B498 /* Build configuration list for PBXNativeTarget "camgui" */;
+			buildPhases = (
+				C1FD70222E189DD10001B498 /* Sources */,
+				C1FD70232E189DD10001B498 /* Frameworks */,
+				C1FD70242E189DD10001B498 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				C1FD70272E189DD10001B498 /* camgui */,
+			);
+			name = camgui;
+			packageProductDependencies = (
+				C1FD703D2E18A2E50001B498 /* Logging */,
+				C1FD703F2E18A2F10001B498 /* ArgumentParser */,
+			);
+			productName = camgui;
+			productReference = C1FD70262E189DD10001B498 /* camgui.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -102,6 +172,9 @@
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
 					C1711B392E0B47CB00ACD8FE = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					C1FD70252E189DD10001B498 = {
 						CreatedOnToolsVersion = 16.4;
 					};
 				};
@@ -125,12 +198,30 @@
 			projectRoot = "";
 			targets = (
 				C1711B392E0B47CB00ACD8FE /* camview */,
+				C1FD70252E189DD10001B498 /* camgui */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		C1FD70242E189DD10001B498 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		C1711B362E0B47CB00ACD8FE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C1FD70222E189DD10001B498 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -282,6 +373,60 @@
 			};
 			name = Release;
 		};
+		C1FD702F2E189DD20001B498 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = camgui/camgui.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RFDDK5QUG8;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.peterichardson.camgui;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		C1FD70302E189DD20001B498 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = camgui/camgui.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RFDDK5QUG8;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.peterichardson.camgui;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -299,6 +444,15 @@
 			buildConfigurations = (
 				C1711B422E0B47CB00ACD8FE /* Debug */,
 				C1711B432E0B47CB00ACD8FE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C1FD70312E189DD20001B498 /* Build configuration list for PBXNativeTarget "camgui" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C1FD702F2E189DD20001B498 /* Debug */,
+				C1FD70302E189DD20001B498 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -331,6 +485,16 @@
 			productName = Logging;
 		};
 		C1711B482E0B488000ACD8FE /* ArgumentParser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C1711B472E0B488000ACD8FE /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
+			productName = ArgumentParser;
+		};
+		C1FD703D2E18A2E50001B498 /* Logging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C1711B442E0B487000ACD8FE /* XCRemoteSwiftPackageReference "swift-log" */;
+			productName = Logging;
+		};
+		C1FD703F2E18A2F10001B498 /* ArgumentParser */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C1711B472E0B488000ACD8FE /* XCRemoteSwiftPackageReference "swift-argument-parser" */;
 			productName = ArgumentParser;
