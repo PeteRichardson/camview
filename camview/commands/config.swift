@@ -9,7 +9,19 @@ import Foundation
 import ArgumentParser
 import Security
 
-
+enum ConfigError: Error, CustomStringConvertible {
+    case unableToLoad(reason: String)
+    case unknown(Error)
+    
+    var description: String {
+        switch self {
+        case .unableToLoad( let reason):
+            return "Unable to load config: \(reason)"
+        case .unknown(let error):
+            return "Unknwon error: \(error)"
+        }
+    }
+}
 
 let configItems: [String: ConfigStorable] = [
     "protect-host": ConfigItem(name: "protect-host", defaultsKey: "protect-host"),
