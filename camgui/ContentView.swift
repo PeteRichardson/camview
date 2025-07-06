@@ -16,12 +16,10 @@ struct ContentView: View {
         }
         .navigationTitle("Cameras")
         .task {
-            let host = UserDefaults.standard.string(forKey: "protect-host") ?? "localhost"
-            guard let key = try? Keychain.LoadApiKey() else {
-                return
+            if let config = Configuration()  {
+                let protect = ProtectService(host: config.host, apiKey: config.apiKey)
+                cameras = try! await protect.cameras()
             }
-            let protect = ProtectService(host: host, apiKey: key)
-            cameras = try! await protect.cameras()
         }
     }
 }

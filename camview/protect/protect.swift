@@ -79,8 +79,7 @@ class ProtectService {
     func fetchData(for path: String, accepting mimetype: MIMEType = .json) async throws -> Data {
         let url = base_url.appendingPathComponent(path)
         var request = URLRequest(url: url)
-        let apiKey = try Keychain.LoadApiKey()
-        request.setValue(apiKey, forHTTPHeaderField: "X-API-KEY")
+        request.setValue(self.apiKey, forHTTPHeaderField: "X-API-KEY")
         request.setValue(mimetype.rawValue, forHTTPHeaderField: "accepts")
         
         let (data, response) = try await URLSession.shared.data(for: request)

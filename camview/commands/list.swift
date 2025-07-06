@@ -59,7 +59,7 @@ struct List: AsyncParsableCommand {
             throw FileNotFoundError(path: "~/.config/camview.json")
         }
         
-        let protect = ProtectService(host: config.unifi.protect.api.host, apiKey: config.unifi.protect.api.apiKey)
+        let protect = ProtectService(host: config.host, apiKey: config.apiKey)
 
         switch object.lowercased() {
         case "liveviews":

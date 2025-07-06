@@ -53,7 +53,11 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "Driveway"
+            argument = "config"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "read"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
