@@ -7,6 +7,7 @@
 
 import Foundation
 import ArgumentParser
+import OSLog
 
 struct FileNotFoundError: Error {
     let path: String
@@ -44,6 +45,7 @@ func list<T: ProtectFetchable>(_ array: [T], format: String = "summary") {
 }
 
 struct List: AsyncParsableCommand {
+    
     static let configuration = CommandConfiguration(
         abstract: "Show a list of liveviews, viewports or cameras",
     )
@@ -55,6 +57,9 @@ struct List: AsyncParsableCommand {
     var format: String = "summary"
     
     func run() async throws {
+        let log = OSLog(subsystem: "com.peterichardson.camview", category: .pointsOfInterest)
+        os_signpost(.begin, log: log, name: "List", "%{public}s", "Fetching data")
+
         guard let config = Configuration() else {
             throw FileNotFoundError(path: "~/.config/camview.json")
         }
@@ -71,6 +76,7 @@ struct List: AsyncParsableCommand {
         default:
             throw ValidationError("Invalid object type: \(object). Use one of: liveviews, viewports, cameras.")
         }
-
+        os_signpost(.end, log: log, name: "List", "%{public}s", "Finished")
+        try await Task.sleep(nanoseconds: 2_000_000_000)
     }
 }
