@@ -33,7 +33,7 @@ camview list cameras
 camview list viewports
 camview list liveviews
 camview show Backyard MyViewport   # assumes you have a camera called Backyard and a viewport named MyViewport
-camview snapshot Backyard   # if you're running iTerm2 or Warp
+camview snapshot Backyard   # if your terminal supports iTerm image protocal (e.g. iTerm, Warp, Wezterm)
 
 
 ----------------------------------------------------------------
@@ -52,12 +52,12 @@ LISTING VIEWPORTS, LIVEVIEWS AND CAMERAS:
 * You can get more data in csv format by adding `-f csv`.  For example: `camview list cameras -f csv`
 
 GETTING CAMERA SNAPSHOTS:
-Some Mac Terminal replacements (e.g. iTerm2 and Warp) can show images inline.   camview has a Snapshot subcommand that captures a snapshot from the specified camera and displays it inline in the terminal. 
+The `camview snapshot [-c | --clipboard ] <camera-name>` command will capture a snapshot from the specified camera and write it to the clipboard (with -c) or to the terminal (without -c).
 
 - It's a static snapshot, not a streaming video.
-- It sends output to the terminal, not to a file or the clipboard (yet)
+- It sends output to the terminal or the clipboard, not to a file
 - It uses the iTerm image protocol, not Kitty
-- I've only tested it in iTerm2 and Warp
+- Not all Mac terminal programs can show images inline.   I've tested that it works in iTerm2, Warp and Wezterm.
 
 CONFIGURATION:
 Camview needs two configuration strings:
