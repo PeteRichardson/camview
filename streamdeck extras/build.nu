@@ -10,6 +10,7 @@ let views = [
   "KATSALLEY"
   "SIDEYARD"
   "SUMMARY"
+  "DECK"
 ]
 
 let build_dir = "apps"
