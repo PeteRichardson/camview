@@ -1,7 +1,8 @@
 let views = [
   "ALL"
+  "BACKYARD180"
   "DOORANDDRIVEWAY"
-  "DRIVEWAY"
+  "DRIVEWAY180"
   "DRIVEWAY2"
   "FAMILYROOM"
   "FIREPIT"
@@ -11,6 +12,7 @@ let views = [
   "SIDEYARD"
   "SUMMARY"
   "DECK"
+  "DEFAULT"
 ]
 
 let build_dir = "apps"

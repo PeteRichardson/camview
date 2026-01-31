@@ -1,10 +1,14 @@
 var target: String {
     #if ALL
     return "All"
+    #elseif BACKYARD180
+    return "BACKYARD180"
     #elseif DOORANDDRIVEWAY
     return "DoorAndDriveway"
-    #elseif DRIVEWAY
-    return "Driveway"
+    #elseif DECK
+    return "Deck"
+    #elseif DRIVEWAY180
+    return "Driveway180"
     #elseif DRIVEWAY2
     return "Driveway2"
     #elseif FAMILYROOM
