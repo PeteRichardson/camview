@@ -7,6 +7,7 @@
 
 import Foundation
 import ArgumentParser
+import Protect
 
 struct Show: AsyncParsableCommand {
     static let configuration = CommandConfiguration(

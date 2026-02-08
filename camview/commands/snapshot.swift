@@ -8,6 +8,8 @@
 import Foundation
 import ArgumentParser
 import AppKit
+import Protect
+
 
 struct Snapshot: AsyncParsableCommand {
     static let configuration = CommandConfiguration(

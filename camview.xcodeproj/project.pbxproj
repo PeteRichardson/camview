@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C13E0D622F39438A00BF0E36 /* Protect in Frameworks */ = {isa = PBXBuildFile; productRef = C13E0D612F39438A00BF0E36 /* Protect */; };
 		C1711B492E0B488000ACD8FE /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = C1711B482E0B488000ACD8FE /* ArgumentParser */; };
 		C1FD70402E18A2F10001B498 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = C1FD703F2E18A2F10001B498 /* ArgumentParser */; };
 /* End PBXBuildFile section */
@@ -29,16 +30,18 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C13E0D5F2F39390900BF0E36 /* Exceptions for "camview" folder in "camview" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				extensions.swift,
+			);
+			target = C1711B392E0B47CB00ACD8FE /* camview */;
+		};
 		C1FD70332E189DFC0001B498 /* Exceptions for "camview" folder in "camgui" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				commands/config.swift,
 				extensions.swift,
-				protect/camera.swift,
-				protect/liveview.swift,
-				protect/protect.swift,
-				protect/protocols.swift,
-				protect/viewport.swift,
 			);
 			target = C1FD70252E189DD10001B498 /* camgui */;
 		};
@@ -48,6 +51,7 @@
 		C1711B3C2E0B47CB00ACD8FE /* camview */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				C13E0D5F2F39390900BF0E36 /* Exceptions for "camview" folder in "camview" target */,
 				C1FD70332E189DFC0001B498 /* Exceptions for "camview" folder in "camgui" target */,
 			);
 			path = camview;
@@ -65,6 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C13E0D622F39438A00BF0E36 /* Protect in Frameworks */,
 				C1711B492E0B488000ACD8FE /* ArgumentParser in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -127,6 +132,7 @@
 			name = camview;
 			packageProductDependencies = (
 				C1711B482E0B488000ACD8FE /* ArgumentParser */,
+				C13E0D612F39438A00BF0E36 /* Protect */,
 			);
 			productName = camview;
 			productReference = C1711B3A2E0B47CB00ACD8FE /* camview */;
@@ -163,7 +169,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1640;
-				LastUpgradeCheck = 1640;
+				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					C1711B392E0B47CB00ACD8FE = {
 						CreatedOnToolsVersion = 16.4;
@@ -184,6 +190,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				C1711B472E0B488000ACD8FE /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
+				C13E0D602F393FA500BF0E36 /* XCLocalSwiftPackageReference "../Protect" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C1711B3B2E0B47CB00ACD8FE /* Products */;
@@ -258,6 +265,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = RFDDK5QUG8;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -283,6 +291,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -322,6 +331,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = RFDDK5QUG8;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -340,6 +350,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
@@ -348,8 +359,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = RFDDK5QUG8;
 				ENABLE_HARDENED_RUNTIME = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 			};
@@ -359,8 +372,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = RFDDK5QUG8;
 				ENABLE_HARDENED_RUNTIME = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 			};
@@ -375,9 +390,13 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = RFDDK5QUG8;
+				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -402,9 +421,13 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = RFDDK5QUG8;
+				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -452,6 +475,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		C13E0D602F393FA500BF0E36 /* XCLocalSwiftPackageReference "../Protect" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../Protect;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		C1711B472E0B488000ACD8FE /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -464,6 +494,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		C13E0D612F39438A00BF0E36 /* Protect */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C13E0D602F393FA500BF0E36 /* XCLocalSwiftPackageReference "../Protect" */;
+			productName = Protect;
+		};
 		C1711B482E0B488000ACD8FE /* ArgumentParser */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C1711B472E0B488000ACD8FE /* XCRemoteSwiftPackageReference "swift-argument-parser" */;

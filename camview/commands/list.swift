@@ -8,6 +8,7 @@
 import Foundation
 import ArgumentParser
 import OSLog
+import Protect
 
 struct FileNotFoundError: Error {
     let path: String
