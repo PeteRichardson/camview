@@ -1,6 +1,15 @@
 {
-  "originHash" : "59ba1edda695b389d6c9ac1809891cd779e4024f505b0ce1a9d5202b6762e38a",
+  "originHash" : "962108ea68014dbd60a0e640749a982a3ae3754c4504731893c784fbbde067ea",
   "pins" : [
+    {
+      "identity" : "protect",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/PeteRichardson/Protect",
+      "state" : {
+        "branch" : "main",
+        "revision" : "2fa0ecc5b594d54d8a90cb4abf88496823755a4e"
+      }
+    },
     {
       "identity" : "swift-argument-parser",
       "kind" : "remoteSourceControl",
