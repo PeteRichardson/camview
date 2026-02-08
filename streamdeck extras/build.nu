@@ -1,7 +1,6 @@
 let views = [
   "ALL"
   "BACKYARD180"
-  "DOORANDDRIVEWAY"
   "DRIVEWAY180"
   "DRIVEWAY2"
   "FAMILYROOM"
@@ -14,6 +13,16 @@ let views = [
   "DECK"
   "DEFAULT"
 ]
+
+def make-plist [exe_name build_dir] {
+    let dest = $"($build_dir)/($exe_name).app/Contents/Info.plist"
+
+    mkdir ($dest | path dirname)
+
+    open Info.plist.template
+    | str replace --all "REPLACEME" $exe_name
+    | save --force $dest
+}
 
 let build_dir = "apps"
 mkdir $build_dir
@@ -35,4 +44,11 @@ for view in $views {                          # e.g. DRIVEWAY (from views list a
     } catch {
         print $"❌ Failed to build ($view)"
     }
+
+    let plist_path = $"($build_dir)/($exe_name).app/Contents/Info.plist"
+    print $"Generating ($plist_path)"
+    
+    open Info.plist.template
+    | str replace --all "REPLACEME" $exe_name
+    | save --force $plist_path
 }
