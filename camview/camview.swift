@@ -65,7 +65,7 @@ Camview needs two configuration strings:
 
 Use the config write subcommand to store them where camview can find them.
 - The API Key is stored securely in the macOS keychain as an "application password" under "com.peterichardson.camview"
-- The Protect host is stored in user preferences in domain "com.peterichardson.camview", key "protect-host"
+- The Protect host is stored in user preferences in the App Group "group.com.peterichardson.camview", key "protect-host"
 
 camview config write api-key XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 camview config write protect-host 192.168.1.1
@@ -81,10 +81,10 @@ security find-generic-password -a api-key -s com.peterichardson.camview -w
 security add-generic-password -a api-key -s com.peterichardson.camview -w XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 # Get Protect Host
-defaults read com.peterichardson.camview protect-host
+defaults read group.com.peterichardson.camview protect-host
 
 # Set Protect Host
-defaults write com.peterichardson.camview protect-host 192.168.1.1
+defaults write group.com.peterichardson.camview protect-host 192.168.1.1
 
 
 EXTRAS:
