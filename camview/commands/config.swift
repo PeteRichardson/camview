@@ -18,7 +18,7 @@ enum ConfigError: Error, CustomStringConvertible {
         case .unableToLoad(let reason):
             return "Unable to load config: \(reason)"
         case .unknown(let error):
-            return "Unknwon error: \(error)"
+            return "Unknown error: \(error)"
         }
     }
 }
