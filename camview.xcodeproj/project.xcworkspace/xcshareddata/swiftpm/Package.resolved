@@ -1,5 +1,5 @@
 {
-  "originHash" : "962108ea68014dbd60a0e640749a982a3ae3754c4504731893c784fbbde067ea",
+  "originHash" : "75e2ba37fad41c17f94ddcf7b91e14403a0386c3f607fa41f2e6026688fb629b",
   "pins" : [
     {
       "identity" : "protect",
@@ -7,7 +7,7 @@
       "location" : "https://github.com/PeteRichardson/Protect",
       "state" : {
         "branch" : "main",
-        "revision" : "2fa0ecc5b594d54d8a90cb4abf88496823755a4e"
+        "revision" : "30da3598b7efe2ad1b6fc00db94cd390463175fc"
       }
     },
     {
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-argument-parser.git",
       "state" : {
-        "revision" : "011f0c765fb46d9cac61bca19be0527e99c98c8b",
-        "version" : "1.5.1"
+        "revision" : "c5d11a805e765f52ba34ec7284bd4fcd6ba68615",
+        "version" : "1.7.0"
       }
     }
   ],

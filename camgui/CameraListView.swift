@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Protect
 
 struct CameraList: View {
     @Binding var cameras: [Camera]

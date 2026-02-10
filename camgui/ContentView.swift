@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Protect
 
 struct ContentView: View {
     @State var cameras: [Camera] = []
