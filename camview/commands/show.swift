@@ -23,9 +23,7 @@ struct Show: AsyncParsableCommand {
 
     func run() async throws {
         do {
-            guard let config = Configuration() else {
-                throw ConfigError.unableToLoad(reason: "Unknown configuration")
-            }
+            let config = try Configuration()
 
             let protect = ProtectService(host: config.host, apiKey: config.apiKey)
 

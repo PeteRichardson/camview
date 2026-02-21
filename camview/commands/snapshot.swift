@@ -42,9 +42,7 @@ struct Snapshot: AsyncParsableCommand {
     }
     
     func run() async throws {
-        guard let config = Configuration() else {
-            throw FileNotFoundError(path: "~/.config/camview.json")
-        }
+        let config = try Configuration() 
         
         let protect = ProtectService(host: config.host, apiKey: config.apiKey)
         let imageData = try await protect.getSnapshot(from: camera, with: highQuality)

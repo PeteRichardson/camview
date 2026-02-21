@@ -61,9 +61,7 @@ struct List: AsyncParsableCommand {
         let log = OSLog(subsystem: "com.peterichardson.camview", category: .pointsOfInterest)
         os_signpost(.begin, log: log, name: "List", "%{public}s", "Fetching data")
 
-        guard let config = Configuration() else {
-            throw FileNotFoundError(path: "~/.config/camview.json")
-        }
+        let config = try Configuration()
         
         let protect = ProtectService(host: config.host, apiKey: config.apiKey)
 

@@ -9,12 +9,15 @@ import ArgumentParser
 import Foundation
 import SimpleConfig
 
+let configItems: [String: any ConfigStorable] = [
+    "api-key": SecureConfigItem(
+        service: "com.peterichardson.camview",
+        key: "api-key"),
+    "protect-host": ConfigItem(
+        suiteName: "group.com.peterichardson.camview",
+        key: "protect-host"),
 
-let configItems: [String: ConfigStorable] = [
-    "protect-host": ConfigItem(name: "protect-host", defaultsKey: "protect-host"),
-    "api-key": SecureConfigItem(name: "api-key", keychainKey: "api-key"),
 ]
-
 
 struct Write: AsyncParsableCommand {
     @Argument(help: "the key name:  protect-host or api-key")
@@ -48,8 +51,8 @@ struct Read: AsyncParsableCommand {
                 print("No value set for \(key)")
             }
         } else {
-            for item in configItems {
-                let value = item.value.description
+            for item in configItems.sorted(by: { $0.key < $1.key}) {
+                let value = item.value
                 print(value)
             }
         }
@@ -67,14 +70,13 @@ struct Configuration {
     var host: String = "unvr.local"
     var apiKey: String = ""
 
-    init?() {
-        do {
-            self.apiKey = try configItems["api-key"]!.read()!
-            if let item = configItems["protect-host"], let host = try item.read() {
-                self.host = host
-            }
-        } catch {
-            print("Error! \(error)")
+    init() throws {
+        guard let apiKey = try configItems["api-key"]?.read() else {
+            throw ValidationError("api-key not configured. Run: camview config write api-key <key>")
+        }
+        self.apiKey = apiKey
+        if let host = try configItems["protect-host"]?.read() {
+            self.host = host
         }
     }
 }
