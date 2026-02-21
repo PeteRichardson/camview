@@ -7,10 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C11D22E72F4A71350023589F /* SimpleConfig in Frameworks */ = {isa = PBXBuildFile; productRef = C11D22E62F4A71350023589F /* SimpleConfig */; };
+		C11D22E92F4A713D0023589F /* SimpleConfig in Frameworks */ = {isa = PBXBuildFile; productRef = C11D22E82F4A713D0023589F /* SimpleConfig */; };
 		C13E0D7D2F394C7800BF0E36 /* Protect in Frameworks */ = {isa = PBXBuildFile; productRef = C13E0D7C2F394C7800BF0E36 /* Protect */; };
-		C13E0DBB2F3A974000BF0E36 /* SimpleConfig in Frameworks */ = {isa = PBXBuildFile; productRef = C13E0DBA2F3A974000BF0E36 /* SimpleConfig */; };
 		C13E0DBD2F3AB0FA00BF0E36 /* Protect in Frameworks */ = {isa = PBXBuildFile; productRef = C13E0DBC2F3AB0FA00BF0E36 /* Protect */; };
-		C13E0DBF2F3AB0FE00BF0E36 /* SimpleConfig in Frameworks */ = {isa = PBXBuildFile; productRef = C13E0DBE2F3AB0FE00BF0E36 /* SimpleConfig */; };
 		C1711B492E0B488000ACD8FE /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = C1711B482E0B488000ACD8FE /* ArgumentParser */; };
 		C1FD70402E18A2F10001B498 /* ArgumentParser in Frameworks */ = {isa = PBXBuildFile; productRef = C1FD703F2E18A2F10001B498 /* ArgumentParser */; };
 /* End PBXBuildFile section */
@@ -63,7 +63,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C13E0DBB2F3A974000BF0E36 /* SimpleConfig in Frameworks */,
+				C11D22E72F4A71350023589F /* SimpleConfig in Frameworks */,
 				C13E0D7D2F394C7800BF0E36 /* Protect in Frameworks */,
 				C1711B492E0B488000ACD8FE /* ArgumentParser in Frameworks */,
 			);
@@ -73,7 +73,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C13E0DBF2F3AB0FE00BF0E36 /* SimpleConfig in Frameworks */,
+				C11D22E92F4A713D0023589F /* SimpleConfig in Frameworks */,
 				C13E0DBD2F3AB0FA00BF0E36 /* Protect in Frameworks */,
 				C1FD70402E18A2F10001B498 /* ArgumentParser in Frameworks */,
 			);
@@ -130,7 +130,7 @@
 			packageProductDependencies = (
 				C1711B482E0B488000ACD8FE /* ArgumentParser */,
 				C13E0D7C2F394C7800BF0E36 /* Protect */,
-				C13E0DBA2F3A974000BF0E36 /* SimpleConfig */,
+				C11D22E62F4A71350023589F /* SimpleConfig */,
 			);
 			productName = camview;
 			productReference = C1711B3A2E0B47CB00ACD8FE /* camview */;
@@ -155,7 +155,7 @@
 			packageProductDependencies = (
 				C1FD703F2E18A2F10001B498 /* ArgumentParser */,
 				C13E0DBC2F3AB0FA00BF0E36 /* Protect */,
-				C13E0DBE2F3AB0FE00BF0E36 /* SimpleConfig */,
+				C11D22E82F4A713D0023589F /* SimpleConfig */,
 			);
 			productName = camgui;
 			productReference = C1FD70262E189DD10001B498 /* camgui.app */;
@@ -191,7 +191,7 @@
 			packageReferences = (
 				C1711B472E0B488000ACD8FE /* XCRemoteSwiftPackageReference "swift-argument-parser" */,
 				C13E0D7B2F394C6400BF0E36 /* XCRemoteSwiftPackageReference "Protect" */,
-				C13E0DB92F3A974000BF0E36 /* XCLocalSwiftPackageReference "../SimpleConfig" */,
+				C11D22E52F4A71230023589F /* XCRemoteSwiftPackageReference "SimpleConfig" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C1711B3B2E0B47CB00ACD8FE /* Products */;
@@ -476,14 +476,15 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		C13E0DB92F3A974000BF0E36 /* XCLocalSwiftPackageReference "../SimpleConfig" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = ../SimpleConfig;
-		};
-/* End XCLocalSwiftPackageReference section */
-
 /* Begin XCRemoteSwiftPackageReference section */
+		C11D22E52F4A71230023589F /* XCRemoteSwiftPackageReference "SimpleConfig" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/PeteRichardson/SimpleConfig";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 		C13E0D7B2F394C6400BF0E36 /* XCRemoteSwiftPackageReference "Protect" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/PeteRichardson/Protect";
@@ -503,24 +504,25 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		C11D22E62F4A71350023589F /* SimpleConfig */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C11D22E52F4A71230023589F /* XCRemoteSwiftPackageReference "SimpleConfig" */;
+			productName = SimpleConfig;
+		};
+		C11D22E82F4A713D0023589F /* SimpleConfig */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C11D22E52F4A71230023589F /* XCRemoteSwiftPackageReference "SimpleConfig" */;
+			productName = SimpleConfig;
+		};
 		C13E0D7C2F394C7800BF0E36 /* Protect */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C13E0D7B2F394C6400BF0E36 /* XCRemoteSwiftPackageReference "Protect" */;
 			productName = Protect;
 		};
-		C13E0DBA2F3A974000BF0E36 /* SimpleConfig */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = SimpleConfig;
-		};
 		C13E0DBC2F3AB0FA00BF0E36 /* Protect */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = C13E0D7B2F394C6400BF0E36 /* XCRemoteSwiftPackageReference "Protect" */;
 			productName = Protect;
-		};
-		C13E0DBE2F3AB0FE00BF0E36 /* SimpleConfig */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = C13E0DB92F3A974000BF0E36 /* XCLocalSwiftPackageReference "../SimpleConfig" */;
-			productName = SimpleConfig;
 		};
 		C1711B482E0B488000ACD8FE /* ArgumentParser */ = {
 			isa = XCSwiftPackageProductDependency;
