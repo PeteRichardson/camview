@@ -43,6 +43,10 @@ DerivedData/
 .swiftpm/xcode/package.xcworkspace/xcuserdata/
 
 #-------------------------------------------------
+# Claude Code
+.claude/
+
+#-------------------------------------------------
 # Miscellaneous
 #-------------------------------------------------
 
