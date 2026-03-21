@@ -11,6 +11,8 @@ let views = [
   "SIDEYARD"
   "SUMMARY"
   "DECK"
+  "DININGROOM"
+  "DOORBELL"
   "DEFAULT"
 ]
 
@@ -33,7 +35,7 @@ for view in $views {                          # e.g. DRIVEWAY (from views list a
     let app = $"($exe_name).app"              # e.g. driveway.app
     let exe_dir = $"($build_dir)/($exe_name).app/Contents/MacOS"   # e.g. driveway.app/Contents/MacOS
     ^mkdir -p $exe_dir                        # e.g. apps/driveway.app/Contents/MacOS
-    print $"Building ($exe_dir)/($exe_name)..."
+    print $"Building ($exe_dir)/($exe_name)... target=($target_define)"
 
     do {
         # build and strip the executables. (each should be about 51K)
@@ -51,4 +53,5 @@ for view in $views {                          # e.g. DRIVEWAY (from views list a
     open Info.plist.template
     | str replace --all "REPLACEME" $exe_name
     | save --force $plist_path
+    print $"-------------------------------------------"
 }

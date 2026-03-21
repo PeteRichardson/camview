@@ -25,6 +25,10 @@ var target: String {
     return "SideYard"
     #elseif SUMMARY
     return "Summary"
+    #elseif DININGROOM
+    return "DiningRoom"
+    #elseif DOORBELL
+    return "Doorbell"
     #else
     return "DEFAULT"
     #endif
