@@ -1,0 +1,33 @@
+{
+  "originHash" : "f8cafaaa8c907cb2b85817f1ed4d315c4029764735e124ec1cc9a49782998b57",
+  "pins" : [
+    {
+      "identity" : "protect",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/PeteRichardson/Protect",
+      "state" : {
+        "revision" : "62b75914f63452bcb12ce9e0013a5d3a9b6107fe",
+        "version" : "1.0.0"
+      }
+    },
+    {
+      "identity" : "simpleconfig",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/PeteRichardson/SimpleConfig",
+      "state" : {
+        "revision" : "5015c7640c17e9a46a776b9e869f53f769876b24",
+        "version" : "1.0.0"
+      }
+    },
+    {
+      "identity" : "swift-argument-parser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-argument-parser.git",
+      "state" : {
+        "revision" : "6a52f3251125d74daf04fcbd5e6f08a75d074382",
+        "version" : "1.8.2"
+      }
+    }
+  ],
+  "version" : 3
+}

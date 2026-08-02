@@ -8,6 +8,7 @@
 import Foundation
 import ArgumentParser
 import AppKit
+import CamviewCore
 import Protect
 
 

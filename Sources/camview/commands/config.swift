@@ -6,18 +6,9 @@
 //
 
 import ArgumentParser
+import CamviewCore
 import Foundation
 import SimpleConfig
-
-let configItems: [String: any ConfigStorable] = [
-    "api-key": SecureConfigItem(
-        service: "com.peterichardson.camview",
-        key: "api-key"),
-    "protect-host": ConfigItem(
-        suiteName: "group.com.peterichardson.camview",
-        key: "protect-host"),
-
-]
 
 struct Write: AsyncParsableCommand {
     @Argument(help: "the key name:  protect-host or api-key")
@@ -64,19 +55,4 @@ struct Config: AsyncParsableCommand {
         abstract: "Manage tool configuration (protect host, api key) and defaults",
         subcommands: [Write.self, Read.self]
     )
-}
-
-struct Configuration {
-    var host: String = "unvr.local"
-    var apiKey: String = ""
-
-    init() throws {
-        guard let apiKey = try configItems["api-key"]?.read() else {
-            throw ValidationError("api-key not configured. Run: camview config write api-key <key>")
-        }
-        self.apiKey = apiKey
-        if let host = try configItems["protect-host"]?.read() {
-            self.host = host
-        }
-    }
 }

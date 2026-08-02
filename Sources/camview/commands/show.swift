@@ -7,6 +7,7 @@
 
 import Foundation
 import ArgumentParser
+import CamviewCore
 import Protect
 import SimpleConfig
 
