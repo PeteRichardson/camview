@@ -1,0 +1,63 @@
+# XcodeGen spec for the camgui app.
+#
+# camgui needs a real Xcode project because SPM can't build a sandboxed .app with
+# entitlements, an asset catalog and a provisioning profile. Keeping the project as a
+# generated artifact means this file — not a 500-line pbxproj — is the thing under review.
+#
+# Regenerate after editing:   cd camgui && xcodegen generate
+# The generated camgui.xcodeproj is NOT committed.
+
+name: camgui
+
+options:
+  bundleIdPrefix: com.peterichardson
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+
+packages:
+  # The root SPM package, for the shared CamviewCore library. This replaces the old
+  # pbxproj file-membership exception on camview/commands/config.swift.
+  camview:
+    path: ..
+  # camgui also uses Protect directly (Camera, ProtectService in ContentView).
+  # Kept at the same version the root package pins.
+  Protect:
+    url: https://github.com/PeteRichardson/Protect
+    minorVersion: 1.0.0
+
+targets:
+  camgui:
+    type: application
+    platform: macOS
+    # Listed explicitly rather than globbing `.` — Xcode is configured to put build output
+    # in ./Build, and a recursive glob sweeps the SPM checkouts in there into the app's
+    # Resources ("Multiple commands produce ..."). Add new files here.
+    sources:
+      - camguiApp.swift
+      - ContentView.swift
+      - CameraListView.swift
+      - Assets.xcassets
+    dependencies:
+      - package: camview
+        product: CamviewCore
+      - package: Protect
+        product: Protect
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.peterichardson.camgui
+        PRODUCT_NAME: camgui
+        DEVELOPMENT_TEAM: RFDDK5QUG8
+        CODE_SIGN_STYLE: Automatic
+        # Relative to this project's own directory (camgui/), not the repo root.
+        CODE_SIGN_ENTITLEMENTS: camgui.entitlements
+        ENABLE_APP_SANDBOX: YES
+        ENABLE_HARDENED_RUNTIME: YES
+        ENABLE_USER_SELECTED_FILES: readonly
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_NSHumanReadableCopyright: ""
+        SWIFT_VERSION: "5.0"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"

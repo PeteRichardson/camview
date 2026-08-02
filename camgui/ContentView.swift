@@ -5,21 +5,37 @@
 //  Created by Peter Richardson on 7/4/25.
 //
 
-import SwiftUI
+import CamviewCore
 import Protect
+import SwiftUI
 
 struct ContentView: View {
-    @State var cameras: [Camera] = []
-                                                    
+    @State private var cameras: [Camera] = []
+    @State private var errorText: String?
+
     var body: some View {
-        NavigationView {
+        NavigationSplitView {
             CameraList(cameras: $cameras)
+                .navigationTitle("Cameras")
+        } detail: {
+            if let errorText {
+                // A missing API key is the expected first-run state, not a crash.
+                ContentUnavailableView(
+                    "Can't reach Protect",
+                    systemImage: "exclamationmark.triangle",
+                    description: Text(errorText))
+            } else {
+                Text("Select a camera")
+                    .foregroundStyle(.secondary)
+            }
         }
-        .navigationTitle("Cameras")
         .task {
-            if let config = Configuration()  {
+            do {
+                let config = try Configuration()
                 let protect = ProtectService(host: config.host, apiKey: config.apiKey)
-                cameras = try! await protect.cameras()
+                cameras = try await protect.cameras()
+            } catch {
+                errorText = String(describing: error)
             }
         }
     }
