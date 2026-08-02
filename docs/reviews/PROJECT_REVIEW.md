@@ -1,118 +1,155 @@
 ---
-git_sha: 63b7ba4
+git_sha: 0d21834
 generated_at: 2026-08-02
 scope: whole repo
+run: 2 (repeat-run; supersedes the 63b7ba4 run)
 ---
 
 # camview — Project Review
 
-*Audit of the repository as of `63b7ba4`. 505 lines of Swift across 10 files, 51 commits, June 2025 – August 2026.*
+*Repeat run at `0d21834`. 637 lines of Swift plus 185 lines of build definitions, across 12 source files.*
 
-**A note on finding count.** The skill's protocol targets 30–80 findings. This repo is 505 LOC. The 35 findings below are what's actually there; the rest of the range would be padding, which the protocol also forbids. Severity is calibrated to a solo-developer personal tool — "Critical" here means *this is broken right now*, not *this will page you at 3am*.
+**What changed since the last run (`63b7ba4`):** the project migrated from a two-target
+Xcode project to Swift Package Manager over 6 commits. 12 findings are now `RESOLVED`,
+1 is downgraded from its original claim, and 8 are `NEW` — most of them introduced *by*
+the migration, which is the point of re-running.
+
+Finding IDs are stable across runs. New findings start at F36, continuing from the
+git-history scan (max prior ID: F35).
 
 ---
 
 ## Executive summary
 
-1. **`camgui` does not compile** (F1). `ContentView.swift:20` still calls `Configuration()` as a failable initializer, but `e3b00e0` made it throwing eight commits ago. Half the repo's product surface is dead on the branch.
-2. **`camview config read api-key` prints your API key in cleartext** (F2), while `camview config read` obfuscates it. The README promises obfuscation. The single-key path prints the raw string instead of the item's `description`.
-3. **Every `camview list` invocation sleeps for two seconds before exiting** (F3, `list.swift:79`) — after the closing signpost, so it isn't even instrumenting anything. This is the single most user-visible defect in a tool whose whole point is speed.
-4. **There are no tests and no test target** (F4). For a 505-LOC tool with a name→id translation layer that is trivially unit-testable, this is the largest structural gap.
-5. **Even once F1 is fixed, `camgui` probably still can't read the API key** (F5): the target has `ENABLE_APP_SANDBOX = YES` but its entitlements grant only an app group, no keychain access group, so it can't reach a generic password written by the unsandboxed CLI.
-6. **A fresh clone can't build the CLI by the documented command** (F8). `CLAUDE.md` says `-scheme camview`; no such scheme exists. The two working CLI schemes live in `xcuserdata/`, which `.gitignore` excludes.
-7. **Error handling is stdout-only and lossy** (F7, F10). `show.swift` prints errors to stdout and rewraps every error — including its own carefully-worded ones — in `ConfigError.unknown`.
-8. **The CLI's argument surface leans on free strings** (F11, F12, F15). `list <object>`, `-f <format>`, and `show <liveview> <viewport>` are all validated by hand or not at all; an invalid `--format` silently produces summary output.
-9. **The help text is a 78-line copy of the README that has already drifted** (F13) — it cites the wrong subcommand and omits the `viewport` argument the CLI actually accepts. `--high-quality` is documented in neither (F14).
-10. **Dependencies are pinned to `main`, not tags** (F9). A push to `Protect` or `SimpleConfig` can break this repo with no commit here — which is precisely how F1 happened.
+1. **The migration did what it was supposed to.** 12 findings resolved, including all four
+   that traced back to the invisible pbxproj file-membership exception (F1, F6, F22, F23).
+   The build graph is now 56 lines of `Package.swift` plus a 63-line `project.yml`.
+2. **F2 is still open and still Critical.** `camview config read api-key` prints the key in
+   cleartext (`config.swift:40`). It's one line, unrelated to the build, and has now
+   survived two reviews and a full refactor of the file it lives in.
+3. **The launcher rework fixed a duplication problem and left a correctness one.** Three
+   apps — `all`, `familyroom`, `summary` — name liveviews that don't exist in Protect (F37).
+   They've been dead buttons for some time; restoring the logging (F20) is what made them
+   visible.
+4. **The generated `.app` bundles fail code-signature verification** (F39). They run today
+   because they're locally built and unquarantined, but `codesign -v` rejects every one.
+   One line in the build script fixes it.
+5. **`camgui/project.yml` re-introduces the exact duplication F21 just removed** (F40): the
+   `Protect` version is pinned in both `Package.swift:21` and `project.yml:27`, and camgui
+   resolves its own separate dependency copy, so the two can silently diverge.
+6. **`project.yml` lists camgui's sources explicitly** (F41), so a new `.swift` file added
+   to `camgui/` is silently not compiled. That is the same *class* of trap as the
+   membership exception the migration removed — invisible-from-the-filesystem build config.
+7. **`streamdeck extras/README.md` documents a build system that no longer exists** (F36) —
+   `build.nu`, nushell, and the per-app `-D` define approach, all deleted.
+8. **F4 (tests) is downgraded, not resolved.** A test target now exists with 4 passing
+   tests, but they cover only config storage identifiers. The name→id translation that is
+   most of what camview does remains untested, and there's still no seam to inject a fake
+   `ProtectService`.
+9. **The CLI's argument surface is untouched by the migration** and remains the largest
+   cluster of open findings: F10–F19, F24, F25 — stdout-only diagnostics, free-string
+   arguments, silent format fallback, no TTY check, no input validation.
+10. **Deliberately deferred and now explicit:** Swift 6 language mode is pinned to `.v5` in
+    four places (F26) with the two known blockers named in `CLAUDE.md`. That's an
+    improvement over the previous silent default, but the debt is unchanged.
 
-No new categories were introduced; all 35 findings fit the existing 13-dimension vocabulary.
+No new categories introduced; all 43 findings fit the existing vocabulary.
 
 ---
 
 ## Architectural mental model
 
-camview is a name→id translation layer over the UniFi Protect REST API, wrapped in an ArgumentParser command tree. The Protect API is id-oriented; humans are name-oriented; essentially everything the CLI does is fetch a collection, match a lowercased name, and issue a request against the resulting id. All network code lives in an external package (`Protect`) the author also maintains, and all credential storage in a second one (`SimpleConfig`). What remains in this repo is genuinely thin: four subcommands, a `Configuration` bridge, and a generic list-printer.
+camview is still a name→id translation layer over the UniFi Protect REST API — the Protect
+API is id-oriented, humans are name-oriented, and nearly every command fetches a collection,
+matches a lowercased name, and issues a request against the resulting id. What changed is
+everything around that core.
 
-There are four build products from one repo: the `camview` CLI, the `camgui` SwiftUI app, and a family of ~51 KB Stream Deck launcher apps generated by a nushell script from a `#if`-switched source file. The launchers sit *above* the CLI (they `exec ~/bin/camview show <name>`), while `camgui` sits *beside* it, sharing exactly one file — `camview/commands/config.swift` — via an Xcode file-system-synchronized-group membership exception (`project.pbxproj:36-42`).
+Swift Package Manager now owns the build. `Package.swift` declares four targets:
+`CamviewCore` (the shared `Configuration`/`configItems` library), `camview` (the
+ArgumentParser command tree), `StreamdeckLauncher` (a dependency-free launcher), and
+`CamviewCoreTests`. Xcode survives only for `camgui`, which SPM cannot build — a sandboxed
+`.app` needs entitlements, an asset catalog and a provisioning profile — and even there the
+project is *generated* from `camgui/project.yml` and gitignored.
 
-That last mechanism is where the architecture is under the most strain. `Configuration` is the shared contract between two targets, but it lives in a file named after a CLI subcommand, in the CLI's source folder, and it throws ArgumentParser's `ValidationError` — so a SwiftUI app with no command line links ArgumentParser to satisfy it. The membership exception is also invisible from the filesystem: nothing in `camgui/` hints that a file from `camview/` is compiled into it. This is the coupling that let F1 sit undetected — a refactor in the CLI's config file silently broke the GUI target, and nothing in the CLI's own build catches it.
+The important structural change is that the CLI and the GUI now share code through a
+declared library product rather than an Xcode file-membership exception. That exception was
+the root cause of the longest-lived defect in this repo: camgui stopped compiling at
+`e3b00e0` and stayed broken for eight commits because nothing in the CLI's build touched
+the GUI target. The new arrangement makes the dependency visible in source.
 
-Churn confirms the shape: `camview.swift` (22 touches) and the config/show/list trio dominate all-time history, and the last six months are almost entirely `project.pbxproj` and `Package.resolved` — the work has been dependency extraction, not feature development. The repo is mid-migration and mostly finished; the loose ends are what this audit found.
+The Stream Deck launchers changed shape too. Previously 15 binaries were compiled from one
+source file via `-D` defines, with the liveview list duplicated in a `#if` chain and a
+nushell array. Now one binary is built and copied to 15 names, deriving its liveview from
+`CommandLine.arguments[0]`. This was partly forced — SPM rejects targets with overlapping
+sources, so the old shape isn't expressible — and it collapsed the list to one place.
+
+Where debt now concentrates has shifted. The old hotspot was the pbxproj; that file is
+gone. The new hotspots are the two hand-maintained lists that no longer have a second copy
+to disagree with, but still have *reality* to disagree with: `Scripts/build-launchers.sh`'s
+`VIEWS` array (which Protect has already outgrown) and `camgui/project.yml`'s explicit
+`sources` list. Both are build config that fails silently rather than loudly.
 
 ---
 
 ## Findings
 
+`RESOLVED` = fixed since the last run. `NEW` = first seen this run. Untagged = carried over,
+still present, re-verified against current line numbers.
+
 | ID | Category | File:Line | Severity | Effort | Description | Recommendation |
 |----|----------|-----------|----------|--------|-------------|----------------|
-| F1 | Correctness & memory safety | `camgui/ContentView.swift:20` | Critical | S | `if let config = Configuration()` — conditional binding on a non-optional, and an unmarked throwing call. Two compile errors; the target cannot build. Verified by type-checking against the built modules. Broken since `e3b00e0`. | `guard let config = try? Configuration() else { … }`, or a `do/catch` that surfaces the failure in the UI (preferred — a missing API key is the expected first-run state). |
-| F2 | Security hygiene / Documentation drift | `camview/commands/config.swift:49` | Critical | S | `print(value.description)` where `value` is the unwrapped `String` — so `camview config read api-key` emits the raw 32-char key. The no-argument path prints the `ConfigStorable` instead, which obfuscates. `README.md:35` promises "the api-key will be slightly obfuscated". | Print `item.description` in both branches so the obfuscating implementation is the only path; add an explicit `--reveal` flag if cleartext output is ever wanted. |
-| F3 | Performance & resource hygiene / UX | `camview/commands/list.swift:79` | High | S | `try await Task.sleep(nanoseconds: 2_000_000_000)` at the end of `run()`. It sits *after* the `.end` signpost on line 78, so it doesn't extend the measured region — it only delays process exit by 2s on every list. | Delete it. If a signpost region needs to survive to be sampled, move work inside the begin/end pair rather than padding the exit. |
-| F4 | Test debt | repo-wide (`project.pbxproj` — no test target) | High | L | No tests, no test target, no CI. The name-matching and CSV-formatting logic is pure and trivially testable; the config layer is mockable behind `ConfigStorable`. | Add an XCTest target covering, at minimum: case-insensitive name resolution, `list` format dispatch, and `Configuration` behavior when the key is absent. Depends on F22 for a seam. |
-| F5 | Dependency & config debt | `camview.xcodeproj/project.pbxproj:396,427`; `camgui/camgui.entitlements` | High | M | camgui builds with `ENABLE_APP_SANDBOX = YES`, but its entitlements declare only `com.apple.security.application-groups` — no `keychain-access-groups`. A sandboxed app gets its own keychain access group and cannot read a generic password written by the unsandboxed CLI under service `com.peterichardson.camview`. **Unverified at runtime** (blocked behind F1 and a missing provisioning profile), but the mechanism is well-established. | Add a shared `keychain-access-groups` entitlement to both targets, or move the key into the app-group container. Verify by running camgui once F1 is fixed. |
-| F6 | Correctness & memory safety | `camgui/ContentView.swift:22` | High | S | `cameras = try! await protect.cameras()` — any network failure, bad host, or expired key crashes the app rather than showing an error. | `do/catch` with an error state in the view; combine with F1's fix in one pass. |
-| F7 | Error handling & observability | `camview/commands/show.swift:58-60` | High | S | `catch { throw ConfigError.unknown(error) }` wraps *every* error, including the `ConfigError.unableToLoad` thrown three lines earlier and `Configuration`'s "run `camview config write api-key`" guidance. Type information is destroyed; the messages survive only because `unknown` interpolates the underlying error. | Remove the blanket `do/catch` entirely — the throws propagate correctly on their own. If wrapping is wanted, catch specific types and let `ConfigError` pass through. |
-| F8 | Dependency & config debt / Documentation drift | `CLAUDE.md` ("Build" section); `camview.xcodeproj/xcshareddata/xcschemes/` | High | S | `CLAUDE.md` documents `xcodebuild -scheme camview`; that scheme does not exist. Only `camgui.xcscheme` and `camview config read.xcscheme` are shared; the usable `camview -h` and `camview list cameras` schemes are in `xcuserdata/`, excluded by `.gitignore:22`. `-target camview` fails differently — package modules don't resolve. So a fresh clone's only route to a CLI build is a scheme named "camview config read". | Add a shared scheme plainly named `camview` and fix the `CLAUDE.md` command. |
-| F9 | Dependency & config debt | `camview.xcodeproj/project.pbxproj:484,492` | High | S | `Protect` and `SimpleConfig` are pinned to `branch = main`. Builds aren't reproducible, and an upstream push can break this repo with no commit here. `Package.resolved` pins revisions, but any resolve moves them. | Tag both packages and switch to `upToNextMinorVersion`, matching how `swift-argument-parser` is already pinned. |
-| F10 | Error handling & observability / UX | `camview/commands/show.swift:51` | Medium | S | `print("# ERROR: …")` sends diagnostics to stdout. Every `print` in the CLI (`list.swift:29,41`, `config.swift:49,51,56`, `snapshot.swift:41`) is stdout. Piping `camview list -f csv` into a file captures error text as data. | Route diagnostics through `FileHandle.standardError` (or ArgumentParser's error path) and reserve stdout for results. |
-| F11 | UX & CLI ergonomics / Idiom debt | `camview/commands/list.swift:54,68-77` | Medium | S | `object` is a free `String` validated by a `switch` with a `default:` that throws. ArgumentParser can do this natively. | Declare `enum ListObject: String, ExpressibleByArgument { case liveviews, viewports, cameras }`. Validation, help enumeration, and the invalid-value message come free. |
-| F12 | UX & CLI ergonomics | `camview/commands/list.swift:34-40,57` | Medium | S | The `format` switch has a bare `default:` mapping to summary, so `camview list cameras -f json` silently produces summary output with a zero exit code. Silent wrong-format is worse than an error. | Same fix as F11 — an `ExpressibleByArgument` enum for `summary`/`csv`. |
-| F13 | Documentation drift | `camview/camview.swift:16-93` | Medium | M | The 78-line `discussion` string duplicates `README.md` almost verbatim and has already drifted from both the README and the code: line 45 says "the first viewport returned by the **list liveviews** command" (should be `list viewports`; `README.md:54` has it right), and the SWITCHING LIVEVIEWS section never mentions the optional `viewport` argument that `show.swift:21` accepts. | Cut the `discussion` to a short orientation block plus a pointer to the README, and let per-subcommand `abstract`/`help` carry the detail. Two copies of the same prose will keep diverging. |
-| F14 | Documentation drift / UX | `camview/commands/snapshot.swift:22-23` | Medium | S | The `--high-quality` flag appears in neither the README nor the help `discussion`. Discoverable only via `camview snapshot --help`. | Document it, or drop it if unused. |
-| F15 | UX & CLI ergonomics | `camview/commands/show.swift:18-22` | Medium | S | Two optional positionals in fixed order means `camview show MyViewport` is silently interpreted as a *liveview* name. `README.md:56-58` documents this trap ("Uh-oh!") rather than fixing it. | Make the viewport an option: `camview show [liveview] [--viewport <name>]`. Positional ambiguity documented as a hazard is a design smell. |
-| F16 | UX & CLI ergonomics / Dependency & config debt | `camview/commands/snapshot.swift:20`; `camview/commands/config.swift:70` | Medium | S | Personal values are compiled in as defaults: `var camera: String = "FrontDoor"` and `var host: String = "unvr.local"`. Another user's first `camview snapshot` fails against a camera that doesn't exist. | Make `camera` a required argument. Keep the host default only if it's a documented UniFi convention; otherwise require configuration and say so in the error. |
-| F17 | Data integrity & robustness | `camview/commands/snapshot.swift:51-55` | Medium | S | `if let image = NSImage(data: imageData)` with no `else`. If decoding fails, the command copies nothing, prints nothing, and exits 0 — the user pastes whatever was on the clipboard before. | Throw on decode failure. |
-| F18 | Data integrity & robustness / UX | `camview/commands/snapshot.swift:28-42` | Medium | S | `showImageInITerm2` writes an OSC-1337 escape sequence unconditionally. `camview snapshot Backyard > out.jpg` writes an escape-wrapped base64 blob, not a JPEG; unsupported terminals get visible garbage. | Check `isatty(STDOUT_FILENO)`; when stdout isn't a TTY, write raw image bytes (which also gives users the file output the README says isn't supported). |
-| F19 | Architectural decay | `camview/commands/list.swift:13-21` | Medium | S | `FileNotFoundError` and its `LocalizedError` conformance are declared and never referenced anywhere in the repo — leftover from the pre-package `config.json` era. | Delete. |
-| F20 | Error handling & observability | `streamdeck extras/main.swift:12-18` | Medium | S | The launcher's `catch` block is empty except for a commented-out log line, and `standardError` is nil'd (line 9). If `~/bin/camview` is missing or unbuilt, the Stream Deck button does nothing at all, with no feedback anywhere. | Restore the `os.Logger` lines (already written, lines 4/13/17) so failures land in Console.app. Cost is a few KB. |
-| F21 | Consistency rot | `streamdeck extras/target.swift:1-34`; `streamdeck extras/build.nu:1-17` | Medium | M | The liveview list exists twice — as a 15-branch `#if` chain and as a nushell array — and both must be edited together. `a10ec04` is exactly this double edit. The Stream Deck README already identifies the fix. | Generate `target.swift` from the `build.nu` list (or from `camview list liveviews`) as a build step. |
-| F22 | Architectural decay | `camview/commands/config.swift:69-82`; `project.pbxproj:36-42` | Medium | M | `Configuration` — the only type shared by both targets — lives in a file named for a CLI subcommand, inside the CLI's folder, and reaches camgui through a pbxproj membership exception that's invisible from the filesystem. This coupling is why F1 went unnoticed. | Move `Configuration` + `configItems` into `SimpleConfig` (or a small shared local package). That also creates the injection seam F4 needs. |
-| F23 | Consistency rot | `camview/commands/config.swift:31,45,75` | Medium | S | `Configuration.init()` throws ArgumentParser's `ValidationError`, so `camgui` links ArgumentParser despite having no command line. A domain type depends on a CLI framework. | Throw `ConfigError.unableToLoad(reason:)` from `Configuration`; keep `ValidationError` inside the `Write`/`Read` command bodies where it belongs. |
-| F24 | Data integrity & robustness | `camview/commands/config.swift:22-35` | Medium | S | `config write` accepts any value for any known key — no length check on the 32-char API key (a constraint stated in three separate docs), no non-empty check on the host. A typo'd key is stored silently and fails later as an opaque HTTP error. | Validate in `Write.run()` before storing; reject with a message naming the expected shape. |
-| F25 | Error handling & observability | `camview/commands/list.swift:62,76,78` | Medium | S | `os_signpost(.begin …)` at line 62 has no matching `.end` on the throwing path (line 76) — the interval leaks whenever an invalid object type is passed. | `defer { os_signpost(.end, …) }` immediately after the begin. |
-| F26 | Type & contract debt | `project.pbxproj:368,381,412,443` | Medium | M | `SWIFT_VERSION = 5.0` across all targets, so Swift 6 strict-concurrency checking is off. `ProtectService` is a non-`Sendable` class used across `await` boundaries and `static var configuration` (F28) is a mutable global — both become errors under Swift 6. Migrating later, with more code, costs more. | Move to Swift 6 language mode now while the surface is 505 lines, or at least enable `SWIFT_STRICT_CONCURRENCY = complete` to see the warnings. |
-| F27 | Dependency & config debt | `project.pbxproj:290,350` (15.5) vs `366,379` (26.0) | Medium | S | The CLI targets macOS 15.5; camgui requires 26.0 — an 11-major-version gap for an app that displays a list of camera names. Nothing in `camgui/` obviously needs 26.0. | Lower camgui's deployment target to match the CLI unless a specific API requires otherwise. |
-| F28 | IDIOM | `camview/camview.swift:13` | Medium | S | `static var configuration` where all four subcommands (`list.swift:50`, `show.swift:14`, `snapshot.swift:15`, `config.swift:63`) use `static let`. Mutable static state on a type is also a Swift 6 concurrency error. Maintenance severity alone: Low. | `static let`. |
-| F29 | IDIOM | `camgui/ContentView.swift:15,18` | Medium | S | `NavigationView` has been deprecated since macOS 13; this target requires 26.0. Separately, `.navigationTitle("Cameras")` is attached to the `NavigationView` itself rather than to its content, so the title doesn't render as intended. Maintenance severity alone: Low. | `NavigationSplitView`, with `.navigationTitle` on the `List` inside. |
-| F30 | IDIOM | `camview/commands/config.swift:70-71`; `camview/commands/list.swift:25` | Medium | S | `Configuration.host`/`.apiKey` are `var` but never mutated after `init` — should be `let` (the `init` assigns them fine either way). `var desc: String` is hoisted above the loop in C style rather than declared at use. Maintenance severity alone: Low. | `let` properties; move `desc` inside the loop, or collapse the whole switch to a ternary. |
-| F31 | Consistency rot | `camgui/CameraListView.swift:2,11` | Low | S | The file is `CameraListView.swift`, the header comment says `CameraList.swift`, and the type is `CameraList`. Three names for one thing. | Pick one — `CameraListView` for both file and type, matching SwiftUI convention. |
-| F32 | Documentation drift | `camview/commands/snapshot.swift:2`; `camview/camview.swift:2` | Low | S | Copy-paste headers: `snapshot.swift` says "Show.swift", `camview.swift` says "main.swift". | Fix or delete the headers; Xcode's boilerplate carries no information here. |
-| F33 | Dependency & config debt | `.gitignore`; `streamdeck extras/apps/` | Low | S | `build.nu` writes 15 generated `.app` bundles into `streamdeck extras/apps/`, which is neither tracked nor ignored — permanent `git status` noise and a real risk of committing binaries by reflex. | Add `streamdeck extras/apps/` to `.gitignore`. |
-| F34 | Documentation drift | repo root | Low | S | No LICENSE file, on a public GitHub repo whose README invites others to use and rewrite the Stream Deck script. Default is all-rights-reserved. | Add one (MIT matches the README's tone). |
-| F35 | Documentation drift | `CLAUDE.md` (Key Dependencies table) | Low | S | The table lists `SimpleConfig` location as "(separate package)"; it moved to `https://github.com/PeteRichardson/SimpleConfig` in `1213563`. | Fill in the URL. |
+| F2 | Security hygiene / Documentation drift | `Sources/camview/commands/config.swift:40` | Critical | S | `print(value.description)` on the unwrapped `String`, so `camview config read api-key` emits the raw key. The no-argument path prints the `ConfigStorable` and obfuscates. `README.md:35` promises obfuscation. Survived a full rewrite of this file. | Print `item.description` in both branches; add `--reveal` if cleartext is ever wanted. |
+| F3 | Performance & resource hygiene / UX & CLI ergonomics | `Sources/camview/commands/list.swift:80` | High | S | `try await Task.sleep(nanoseconds: 2_000_000_000)` still present, still *after* the closing signpost — so it instruments nothing and only delays exit by 2s on every list. | Delete the line. |
+| F4 | Test debt | `Tests/CamviewCoreTests/ConfigurationTests.swift` | High | L | **Downgraded, not resolved.** A test target now exists (4 passing tests) covering config storage identifiers. Still untested: case-insensitive name→id resolution, `list` format dispatch, snapshot output selection. Commands construct `ProtectService` directly, so there is still no injection seam. No CI. | Introduce a protocol seam for `ProtectService` and test the name-matching logic, which is the bulk of the CLI's behaviour. |
+| F7 | Error handling & observability | `Sources/camview/commands/show.swift:59-61` | High | S | `catch { throw ConfigError.unknown(error) }` still wraps every error, including the `ConfigError.unableToLoad` thrown three lines above and `Configuration`'s own guidance. | Remove the blanket `do/catch`; the throws propagate correctly unaided. |
+| F37 | Data integrity & robustness / UX & CLI ergonomics | `Scripts/build-launchers.sh:25,32,38` | High | S | **NEW.** Three launcher apps — `all`, `familyroom`, `summary` — name liveviews that no longer exist in Protect (verified against `camview list liveviews`: 12 liveviews, all others matched). Pressing those Stream Deck buttons does nothing. Inherited from the original `build.nu` list; invisible until F20 restored logging. | Delete the three entries, or generate `VIEWS` from `camview list liveviews` as the Stream Deck README has suggested since the beginning. |
+| F39 | Dependency & config debt | `Scripts/build-launchers.sh:55-58` | Medium | S | **NEW.** Every generated `.app` fails `codesign -v`: *"code has no resources but signature indicates they must be present"*. The bundle inherits the executable's linker-signed signature, which doesn't describe a bundle. They run today only because they're locally built and unquarantined. Confirmed the executable itself is fine — stripping is not the cause; the bundle is never signed as a bundle. | Add `codesign -s - --force "$app"` after writing `Info.plist`. Verified this makes `codesign -v` pass and the app still runs. |
+| F40 | Consistency rot / Dependency & config debt | `camgui/project.yml:26-27`; `Package.swift:21` | Medium | S | **NEW.** The `Protect` version is pinned in two places, and camgui resolves its own dependency copy under `camgui/Build/.../SourcePackages`. Nothing enforces agreement, so camgui and the CLI can build against different `Protect` versions. This is the same duplicated-list failure mode F21 just eliminated. | Have camgui depend on `Protect` transitively through the `CamviewCore` product (re-export it), or document the pair as a unit that must be edited together. |
+| F41 | Architectural decay / Dependency & config debt | `camgui/project.yml:36-40` | Medium | S | **NEW.** camgui's sources are listed file-by-file. A new `.swift` added to `camgui/` is silently not compiled — no error, just absent behaviour. Chosen deliberately (globbing `.` swept the `Build/` directory's SPM checkouts into app Resources), but the failure mode is invisible build config, the same class of trap as the pbxproj membership exception this migration removed. | Glob with an exclusion instead: `sources: [{path: ., excludes: [Build, project.yml, camgui.xcodeproj, camgui.entitlements]}]`. |
+| F36 | Documentation drift | `streamdeck extras/README.md:12,14,17,18` | Medium | S | **NEW.** Documents a build system that no longer exists: `build.nu`, nushell, the per-app `-D` define, and the hardcoded list. The file it tells you to edit was deleted in `f6b1af8`. | Rewrite for `Scripts/build-launchers.sh` and the `argv[0]` scheme. Its standing suggestion — generate the list from `camview list liveviews` — is now the fix for F37 and worth keeping. |
+| F38 | Data integrity & robustness | `Scripts/build-launchers.sh:51-61` | Medium | S | **NEW.** The script only creates and overwrites; it never removes. Deleting a name from `VIEWS` leaves its `.app` in `streamdeck extras/apps/` forever, so a "removed" button keeps working (or keeps failing). Directly blocks the clean fix for F37. | `rm -rf "$APPS_DIR"` before the loop, or prune bundles whose name isn't in `VIEWS`. |
+| F42 | Data integrity & robustness | `Sources/StreamdeckLauncher/main.swift:21-23` | Medium | S | **NEW.** The liveview comes from `argv[0]` with no validation. Running the build product directly (`.build/release/StreamdeckLauncher`) requests a liveview named `StreamdeckLauncher`; `deletingPathExtension()` also truncates any name containing a dot. Failure is silent apart from the log line. | Accept an optional argument override, and log distinctly when `camview` exits non-zero so a bad name is distinguishable from a missing binary. |
+| F10 | Error handling & observability / UX & CLI ergonomics | `Sources/camview/commands/show.swift:52` | Medium | S | 7 `print()` calls across the commands, 0 uses of stderr. Piping `camview list -f csv` to a file captures error text as data. | Route diagnostics through `FileHandle.standardError`. |
+| F11 | UX & CLI ergonomics / IDIOM | `Sources/camview/commands/list.swift:55,69-78` | Medium | S | `object` is still a free `String` hand-validated by a `switch`. | `enum ListObject: String, ExpressibleByArgument`. |
+| F12 | UX & CLI ergonomics | `Sources/camview/commands/list.swift:35-41,58` | Medium | S | `-f json` still silently produces summary output with exit 0. | Same `ExpressibleByArgument` fix as F11. |
+| F13 | Documentation drift | `Sources/camview/camview.swift:16-93` | Medium | M | The 85-line `discussion` still duplicates the README and still says "the first viewport returned by the **list liveviews** command" (should be `list viewports`). Still omits the `viewport` argument `show.swift:22` accepts. | Cut to a short orientation block plus a README pointer. |
+| F14 | Documentation drift / UX & CLI ergonomics | `Sources/camview/commands/snapshot.swift:23-24` | Medium | S | `--high-quality` still documented nowhere (0 mentions in README or help). | Document it, or drop it. |
+| F15 | UX & CLI ergonomics | `Sources/camview/commands/show.swift:19-23` | Medium | S | `camview show MyViewport` still silently reads as a liveview name; `README.md:56-58` still documents the trap rather than fixing it. | `camview show [liveview] [--viewport <name>]`. |
+| F16 | UX & CLI ergonomics / Dependency & config debt | `Sources/camview/commands/snapshot.swift:21`; `Sources/CamviewCore/Configuration.swift:31` | Medium | S | Personal defaults still compiled in: `camera = "FrontDoor"`, `defaultHost = "unvr.local"`. The host default now also masks a failed App Group read, since the fallback is identical to the stored value. | Make `camera` required. Distinguish "host unset" from "host read failed". |
+| F17 | Data integrity & robustness | `Sources/camview/commands/snapshot.swift:52-56` | Medium | S | `if let image = NSImage(data:)` with no `else` — decode failure copies nothing, prints nothing, exits 0. | Throw on decode failure. |
+| F18 | Data integrity & robustness / UX & CLI ergonomics | `Sources/camview/commands/snapshot.swift:29-43` | Medium | S | Still 0 `isatty` checks; `camview snapshot X > out.jpg` writes escape-wrapped base64. | Check `isatty(STDOUT_FILENO)`; write raw bytes when not a TTY. |
+| F19 | Architectural decay | `Sources/camview/commands/list.swift:14-22` | Medium | S | `FileNotFoundError` still declared, still unreferenced — now survived a file move that touched every line's path. | Delete. |
+| F24 | Data integrity & robustness | `Sources/camview/commands/config.swift:14-27` | Medium | S | `config write` still accepts any value for any key — no length check on the 32-char API key, no non-empty check on the host. | Validate in `Write.run()` before storing. |
+| F25 | Error handling & observability | `Sources/camview/commands/list.swift:62-79` | Medium | S | Still 0 `defer` — the `.begin` signpost leaks whenever an invalid object type throws. | `defer { os_signpost(.end, …) }` after the begin. |
+| F26 | Type & contract debt | `Package.swift:35,45,52,54` | Medium | M | Swift 6 language mode still off, now explicitly via `.swiftLanguageMode(.v5)` on all four targets. Blockers are documented in `CLAUDE.md`: `ProtectService` non-`Sendable` across `await`, and F28's mutable static. Deferring is defensible; the debt is unchanged. | Migrate while the surface is 637 lines, or enable `SWIFT_STRICT_CONCURRENCY=complete` to size the work. |
+| F27 | Dependency & config debt | `camgui/project.yml:15` | Medium | S | camgui still requires macOS 26.0 while the CLI targets 15; nothing in camgui's 84 lines obviously needs it. Now a one-line change in `project.yml` rather than a pbxproj edit. | Lower to match unless a specific API requires otherwise. |
+| F28 | IDIOM | `Sources/camview/camview.swift:13` | Medium | S | `static var configuration` where all four subcommands use `static let`. Also a Swift 6 blocker (F26). Maintenance severity alone: Low. | `static let`. |
+| F30 | IDIOM | `Sources/camview/commands/list.swift:25` | Medium | S | **Partially resolved.** `Configuration`'s properties are now `let` (rewritten in `CamviewCore`). `var desc: String` is still hoisted above the loop C-style. | Move `desc` into the loop or collapse the switch to a ternary. |
+| F43 | Consistency rot | `Scripts/`, `streamdeck extras/`, `Sources/StreamdeckLauncher/` | Low | S | **NEW.** One feature now spans three directories: source in `Sources/StreamdeckLauncher/`, build script in `Scripts/`, template and icons in `streamdeck extras/`, output in `streamdeck extras/apps/`. Defensible (source vs. resources vs. tooling) but the `streamdeck extras/` name no longer describes what's left in it. | Fold the template and icons under `Sources/StreamdeckLauncher/Resources/`, or rename the folder to reflect that it's now assets + generated output. |
+| F31 | Consistency rot | `camgui/CameraListView.swift:2,11` | Low | S | File, header comment, and type still disagree: `CameraListView.swift` / `CameraList.swift` / `struct CameraList`. | Settle on `CameraListView`. |
+| F32 | Documentation drift | `Sources/camview/commands/snapshot.swift:2`; `Sources/camview/camview.swift:2` | Low | S | Copy-paste headers survived the move: `snapshot.swift` says "Show.swift", `camview.swift` says "main.swift". | Fix or delete. |
+| F34 | Documentation drift | repo root | Low | S | Still no LICENSE on a public repo whose README invites reuse of the Stream Deck code. | Add one. |
+| F1 | Correctness & memory safety | `camgui/ContentView.swift` | Critical | S | **RESOLVED** in `3820c94`. camgui compiles; verified BUILD SUCCEEDED and the app runs with the camera list populating. | — |
+| F5 | Dependency & config debt | `camgui/camgui.entitlements` | High | M | **RESOLVED** in `0d21834`, but the diagnosis in this finding was wrong. Keychain access works fine under the sandbox. The real blocker was a missing `com.apple.security.network.client`, surfacing as NSURLError -1003 with "Resolved 0 endpoints" — which reads as a DNS problem and isn't. | — |
+| F6 | Correctness & memory safety | `camgui/ContentView.swift` | High | S | **RESOLVED** in `3820c94`. `try!` replaced by `do/catch` rendering a `ContentUnavailableView`. | — |
+| F8 | Dependency & config debt / Documentation drift | `CLAUDE.md` | High | S | **RESOLVED** in `749c5e2`/`3a147f8`. `swift build` needs no scheme; `camview.xcodeproj` deleted and docs corrected. | — |
+| F9 | Dependency & config debt | `Package.swift:21-22` | High | S | **RESOLVED** in `749c5e2`. Pinned to tags. More urgent than stated: both packages' `main` had already moved past the built revisions, so migrating under a branch pin would have silently swapped versions. | — |
+| F20 | Error handling & observability | `Sources/StreamdeckLauncher/main.swift:38,43` | Medium | S | **RESOLVED** in `f6b1af8`. `os.Logger` restored on both paths — which immediately exposed F37. | — |
+| F21 | Consistency rot | `Scripts/build-launchers.sh` | Medium | M | **RESOLVED** in `f6b1af8`. One list, in one file. The predicted drift had already occurred (`DOORANDDRIVEWAY` branch never built). | — |
+| F22 | Architectural decay | `Sources/CamviewCore/Configuration.swift` | Medium | M | **RESOLVED** in `749c5e2`. `CamviewCore` is a declared library product; the membership exception is gone with the pbxproj. | — |
+| F23 | Consistency rot | `Sources/CamviewCore/Configuration.swift:38` | Medium | S | **RESOLVED** in `749c5e2`. Throws `ConfigError.unableToLoad`; camgui no longer links ArgumentParser. CLI error output verified byte-identical. | — |
+| F29 | IDIOM | `camgui/ContentView.swift:17` | Medium | S | **RESOLVED** in `3820c94`. `NavigationSplitView`, with `.navigationTitle` on the content where it renders. | — |
+| F33 | Dependency & config debt | `.gitignore` | Low | S | **RESOLVED** in `098e889`. | — |
+| F35 | Documentation drift | `CLAUDE.md:38` | Low | S | **RESOLVED** in `3a147f8`. | — |
 
 ---
 
 ## Top 5 — if you fix nothing else, fix these
 
-### 1. F1 — make `camgui` compile (and stop it crashing)
-
-Half the repo doesn't build. Fixing F1 and F6 together is one edit:
+### 1. F2 — stop printing the API key (Critical, one line, twice deferred)
 
 ```swift
-// camgui/ContentView.swift
-@State var cameras: [Camera] = []
-@State var errorText: String?
-
-.task {
-    do {
-        let config = try Configuration()
-        let protect = ProtectService(host: config.host, apiKey: config.apiKey)
-        cameras = try await protect.cameras()
-    } catch {
-        errorText = String(describing: error)   // shown in the view, not fatalError'd
-    }
-}
-```
-
-Then check F5 immediately — a clean compile that still can't read the Keychain isn't done.
-
-### 2. F2 — stop printing the API key
-
-One line, and it makes the two `config read` paths agree with the README:
-
-```swift
-// camview/commands/config.swift:48-52
+// Sources/camview/commands/config.swift:38-42
 if let item = configItems[key] {
     print(item.description)          // was: print(value.description) on the raw String
 } else {
@@ -120,82 +157,140 @@ if let item = configItems[key] {
 }
 ```
 
-`SecureConfigItem.description` already renders `abc123....................xyz789`.
+`SecureConfigItem.description` already renders `abc123....................xyz789`. This has
+now outlived two reviews and a rewrite of the file it lives in.
 
-### 3. F3 — delete the two-second sleep
+### 2. F37 + F38 — the three dead Stream Deck buttons
+
+These are one job: F38 blocks F37's clean fix, because deleting names from `VIEWS` leaves
+their bundles behind.
+
+```diff
++rm -rf "$APPS_DIR"          # stale bundles otherwise outlive their VIEWS entry
+ mkdir -p "$APPS_DIR"
+```
+
+Then drop `all`, `familyroom`, `summary`. Better still, generate the list — which the Stream
+Deck README proposed before any of this refactoring:
+
+```bash
+mapfile -t VIEWS < <(camview list liveviews -f csv | tail -n +2 | cut -d, -f1 | tr 'A-Z' 'a-z')
+```
+
+That makes drift structurally impossible rather than a comment to re-check.
+
+### 3. F39 — sign the bundles
+
+```diff
+     sed "s/REPLACEME/$view/g" "$TEMPLATE" > "$app/Contents/Info.plist"
++    codesign -s - --force "$app"
+```
+
+Verified: `codesign -v` passes afterwards and the app still launches. Without it every
+bundle fails verification, which will bite the first time one is copied to another Mac or
+macOS tightens enforcement.
+
+### 4. F41 — stop listing camgui's sources by hand
+
+```yaml
+sources:
+  - path: .
+    excludes: [Build, project.yml, camgui.xcodeproj, camgui.entitlements]
+```
+
+The explicit list was a workaround for the glob sweeping `Build/` into app Resources;
+excluding `Build` addresses that directly. As written, adding a file to `camgui/` fails
+silently — the same invisible-build-config trap the migration was meant to end.
+
+### 5. F3 — delete the two-second sleep
 
 ```diff
   os_signpost(.end, log: log, name: "List", "%{public}s", "Finished")
 - try await Task.sleep(nanoseconds: 2_000_000_000)
 ```
 
-Nothing else in the repo does this. It's the difference between a tool that feels instant and one that feels broken.
-
-### 4. F8 — make the repo buildable from a fresh clone
-
-Xcode → Manage Schemes → add a scheme named `camview` → check **Shared**. Commit `camview.xcodeproj/xcshareddata/xcschemes/camview.xcscheme`. Then correct `CLAUDE.md`, which currently documents a command that has never worked for anyone who cloned this repo:
-
-```sh
-xcodebuild -project camview.xcodeproj -scheme camview -configuration Release   # will finally be true
-```
-
-### 5. F22 — move `Configuration` out of the CLI's command folder
-
-This is the root cause of F1 rather than another instance of it. Moving `Configuration` and `configItems` into `SimpleConfig` (or a local `CamviewCore` package) does four things at once: makes the camgui dependency visible in source instead of buried in `project.pbxproj:36-42`, lets the CLI's own build catch breakage in shared code, removes camgui's accidental ArgumentParser dependency (F23), and creates the protocol seam that makes F4's tests writable. Roughly a 30-line move plus a package edit.
+It sits after the closing signpost, so it measures nothing. It is the single most
+user-visible defect in a tool whose entire value is feeling instant.
 
 ---
 
 ## Quick wins
 
-Low effort, Medium or higher severity — a single afternoon:
+Low effort, Medium or higher severity:
 
-- [ ] **F3** — delete `Task.sleep` in `list.swift:79`
-- [ ] **F2** — print `item.description` in `config.swift:49`
-- [ ] **F1 + F6** — fix the camgui `.task` block (compile error + `try!`)
-- [ ] **F19** — delete the unused `FileNotFoundError` in `list.swift:13-21`
-- [ ] **F7** — remove the blanket `do/catch` in `show.swift:58-60`
-- [ ] **F11 + F12** — one `ExpressibleByArgument` enum each for `object` and `format`
-- [ ] **F25** — `defer` the closing signpost in `list.swift`
-- [ ] **F28** — `static var` → `static let` in `camview.swift:13`
-- [ ] **F30** — `var` → `let` in `Configuration`
-- [ ] **F16** — drop the `"FrontDoor"` default in `snapshot.swift:20`
+- [ ] **F2** — print `item.description` (Critical, one line)
+- [ ] **F3** — delete `Task.sleep` in `list.swift:80`
+- [ ] **F39** — `codesign -s - --force "$app"` in the build script
+- [ ] **F38** — `rm -rf "$APPS_DIR"` before the loop
+- [ ] **F37** — drop the three dead liveview names
+- [ ] **F19** — delete unused `FileNotFoundError`
+- [ ] **F7** — remove the blanket `do/catch` in `show.swift`
+- [ ] **F25** — `defer` the closing signpost
+- [ ] **F28** — `static var` → `static let`
+- [ ] **F40** — collapse the duplicated `Protect` pin
+- [ ] **F41** — glob camgui sources with an exclusion
 - [ ] **F14** — document `--high-quality`
+- [ ] **F27** — lower camgui's deployment target
 - [ ] **F32** — fix the two stale header comments
-- [ ] **F33** — gitignore `streamdeck extras/apps/`
 - [ ] **F34** — add a LICENSE
-- [ ] **F35** — fill in the SimpleConfig URL in `CLAUDE.md`
 
 ---
 
 ## Things that look bad but are actually fine
 
-**`ProtectService`'s caches are never invalidated** (`Protect/Protect.swift:35-39`). In a long-lived app this would be a bug. But every CLI invocation is a fresh process, and the cache exists to stop `show` from fetching viewports twice within one command. It's correctly scoped to the process lifetime. It *will* become a real problem when camgui grows a refresh button — flag it then, not now.
+**`camgui.xcodeproj` isn't committed.** A generated project that only exists after running
+`xcodegen generate` looks like a broken checkout. It's the right call: `project.yml` is
+reviewable, a pbxproj isn't, and this repo's worst historical bug lived in a pbxproj detail
+nobody could see. The regeneration command is in `.gitignore` next to the rule.
 
-**`show.swift` re-implements name→id lookup that `Protect` already has.** `lookupViewportId(byName:)` exists at `Protect/Protect.swift:246` and does exactly what `show.swift:35` does by hand. But it's `internal`, not `public`, so the CLI genuinely cannot call it. This is a missing `public` in the package, not duplication in this repo — noted in Open Questions rather than charged against these files.
+**Sources are split across `Sources/`, `camgui/`, and `streamdeck extras/`.** This reads as
+disorganisation but reflects three genuinely different build systems — SPM, Xcode, and a
+copy script. Only the naming is stale, which is F43 (Low).
 
-**`camview.swift` is 100 lines for an empty struct.** 78 of those are the help `discussion` string. It's not a god file; the drift in that string is F13, but the size itself is fine.
+**`Package.swift` pins `.swiftLanguageMode(.v5)` on every target.** Pinning to an older
+language mode usually signals avoidance. Here it's deliberate and documented, and it kept a
+concurrency migration out of a build-system migration. Tracked as F26 rather than hidden.
 
-**The 15-branch `#if` chain in `target.swift`.** This looks like textbook copy-paste, and the obvious "fix" — read the liveview name from a config file or argument — would defeat the entire purpose. The Stream Deck can't pass arguments, and the design goal is a 51 KB binary with no I/O at startup. Compile-time specialization is the correct tool. The *duplication of the list across two files* is a real finding (F21); the `#if` chain itself is not.
+**`StreamdeckLauncher` is exposed as a package product.** It doesn't need to be — nothing
+external consumes it. But it costs nothing and makes `swift build --product` work, which
+the build script uses.
 
-**A global free function `list<T>` at `list.swift:24`, outside any type.** In a larger codebase this would be namespace pollution. Here it's one generic printer used by two call sites, and making it a static method on a `Formatter` type would be ceremony without benefit.
+**`ProtectService`'s caches are never invalidated.** Still correct for a one-shot CLI: each
+invocation is a fresh process and the cache exists so `show` doesn't fetch twice. It will
+become a real bug when camgui grows a refresh button — not before.
 
-**No `Package.swift`.** SPM can't build a SwiftUI `.app` target with entitlements and a provisioning profile anyway, so the Xcode project is load-bearing, not laziness. The cost is that CI needs a macOS runner with Xcode — worth knowing, not worth changing.
+**The three dead launcher apps aren't a regression from the `argv[0]` rework.** They were
+equally dead under `build.nu`; the new logging is what surfaced them. Flagged as F37 on
+merit, not blamed on the refactor.
 
-**`Build/` lives inside the repo.** It's correctly covered by `.gitignore:57`, and keeping build products next to the project is a reasonable local preference.
+**`camview show` prints diagnostics to stdout before failing (F10) yet still exits 1.** The
+exit code is correct, and I verified it byte-identical to the pre-migration binary — the
+stream choice is the bug, not the exit status.
 
 ---
 
 ## Open questions for the maintainer
 
-- **Is plain HTTP to the Protect controller deliberate?** `Protect/Protect.swift:51` builds `http://<host>/proxy/protect/integration/v1`, so the API key travels in an `X-API-KEY` header in the clear on every request. On a trusted LAN with a self-signed controller cert this is a defensible trade, but it's a cross-repo decision I can't make for you. If it's deliberate, it deserves a comment in the package.
-- **Should `lookupViewportId`/`lookupCameraId` be `public`?** Making them public would let `show.swift` shed ~10 lines. Is the current `internal` visibility intentional API design, or just the default nobody revisited?
-- **Where is camgui going?** `6b3c9f0` mentions snapshots and possibly video streams. Whether F5/F27 are worth fixing depends on whether it's a real product or a SwiftUI scratchpad — if the latter, say so in the README and I'd stop counting its gaps as debt.
-- **Is `unvr.local` a UniFi convention or your hostname?** It determines whether F16's host default is a sensible fallback or a personal detail leaking into shared code.
-- **Do you want `camview snapshot > file.jpg` to work?** The README says snapshot output goes to terminal or clipboard, "not to a file." F18's TTY check would make file redirection work as a side effect. Deliberate scope limit, or just not built yet?
-- **`swiftlint` and `periphery` are not installed on this machine**, so the idiom and dead-code findings above come from manual reading rather than tooling. I didn't install them — say the word and I'll add them (Homebrew) for a stricter second pass.
+- **Are `all`, `familyroom` and `summary` liveviews you deleted, or Stream Deck buttons you
+  still want?** F37 assumes the former. If the latter, the fix is in Protect, not here.
+- **Is plain `http://` to the controller deliberate?** Unchanged from the last run and still
+  unanswered — the API key travels in a header in the clear. `Protect.swift:51`.
+- **Should camgui share the CLI's dependency resolution?** F40's cleanest fix is re-exporting
+  `Protect` from `CamviewCore`, which couples the two more tightly than you may want.
+- **Is `unvr.local` a UniFi convention or your hostname?** It now matters more: it's both the
+  stored value and the fallback, so a failed App Group read is indistinguishable from success
+  (F16).
+- **Do you want `camview snapshot > file.jpg` to work?** F18's TTY check would enable it as a
+  side effect. Deliberate scope limit, or not built yet?
+- **`swiftlint` and `periphery` are still not installed**, so idiom and dead-code findings
+  remain hand-derived. `swift build` is warning-free, which is genuine but weaker evidence.
 
 ---
 
-*Next: `/make-issues` to file the Medium+ findings as GitHub issues (`--all` to include Low).*
+## Document History
 
-*`camgui` came out badly (F1, F5, F6, F29 — four findings across 43 lines). Consider `/code-review camgui` for line-level depth once F1 is fixed and the target builds.*
+| Date | Change |
+|------|--------|
+| 2026-08-02 | Initial document generated from codebase (`63b7ba4`) |
+| 2026-08-02 | Rewritten for the SPM migration (superseded) |
+| 2026-08-02 | Repeat run at `0d21834`: 12 findings RESOLVED, F4 downgraded, F36–F43 NEW |
