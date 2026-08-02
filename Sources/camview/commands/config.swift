@@ -36,15 +36,17 @@ struct Read: AsyncParsableCommand {
                 throw ValidationError("Unknown config key: \(key)")
             }
 
-            if let value = try item.read() {
-                print(value.description)
-            } else {
+            // Print the item, never the raw value. `ConfigStorable.description` is what
+            // obfuscates a secret — printing `try item.read()` directly emitted the API
+            // key in cleartext, which the no-argument branch below never did.
+            guard try item.read() != nil else {
                 print("No value set for \(key)")
+                return
             }
+            print(item.description)
         } else {
-            for item in configItems.sorted(by: { $0.key < $1.key}) {
-                let value = item.value
-                print(value)
+            for (_, item) in configItems.sorted(by: { $0.key < $1.key }) {
+                print(item.description)
             }
         }
     }
