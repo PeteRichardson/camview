@@ -1,4 +1,5 @@
 config.json
+streamdeck extras/apps/
 
 #-------------------------------------------------
 # macOS housekeeping
@@ -41,10 +42,6 @@ DerivedData/
 # Swift Package Manager artefacts
 .build/
 .swiftpm/xcode/package.xcworkspace/xcuserdata/
-
-#-------------------------------------------------
-# Claude Code
-.claude/
 
 #-------------------------------------------------
 # Miscellaneous
