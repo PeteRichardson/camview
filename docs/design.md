@@ -25,7 +25,7 @@ them to two external Swift packages the author also maintains.
 - List cameras, viewports and liveviews in both human and CSV form
 - Show a camera snapshot inline in the terminal without writing a temp file
 - Store the Protect host and API key once, securely, shared by every artifact here
-- Keep the Stream Deck launcher binaries tiny (~51 KB) and instant to launch
+- Keep the Stream Deck launcher binaries tiny (~55 KB) and instant to launch
 
 **Non-Goals:**
 
@@ -33,8 +33,8 @@ them to two external Swift packages the author also maintains.
 - Cross-platform support; this is macOS-only by design (Keychain, `NSPasteboard`, SwiftUI)
 - General-purpose UniFi Protect coverage — the `Protect` package wraps only the
   handful of endpoints camview actually needs
-- Being a product. There is no test suite, no CI, no release process, and no
-  distribution story beyond copying a binary to `~/bin`
+- Being a product. There is no CI, no release process, and no distribution story beyond
+  copying a binary to `~/bin`. Tests exist but cover only the config layer.
 
 ---
 
@@ -45,15 +45,26 @@ extracted from this repo over time — `Protect` (UniFi Protect API wrappers and
 and `SimpleConfig` (credential storage). Above them, `camview` is an ArgumentParser
 command tree where each subcommand is a small, self-contained async unit of work.
 `camgui` sits beside the CLI as a second front-end over the same packages. The Stream
-Deck launchers sit *above* the CLI: they are separate `swiftc`-compiled binaries that
-know nothing about Protect and simply exec `~/bin/camview show <liveview>`.
+Deck launchers sit *above* the CLI: they are a separate dependency-free binary that
+knows nothing about Protect and simply execs `~/bin/camview show <liveview>`.
 
-The single piece of code shared directly between the two Xcode targets is
-`camview/commands/config.swift`. Rather than being pushed into a package, it is
-compiled into `camgui` via an Xcode file-system-synchronized-group *membership
-exception* (`camview.xcodeproj/project.pbxproj:36`). This is why `camgui` also links
-ArgumentParser despite having no command line: `Configuration` throws
-`ValidationError`.
+Swift Package Manager owns the build. The root `Package.swift` declares three targets —
+`CamviewCore` (library), `camview` (executable) and `StreamdeckLauncher` (executable) —
+plus a test target. Xcode survives only for `camgui`, which SPM cannot build: a sandboxed
+`.app` needs entitlements, an asset catalog and a provisioning profile. Even there the
+project is a *generated* artifact — `camgui/project.yml` is the source of truth and
+`camgui.xcodeproj` is gitignored, so the build configuration under review is 60 lines of
+YAML rather than a pbxproj.
+
+The code shared between the CLI and the GUI is `CamviewCore`, a real library target both
+depend on by name. It holds `Configuration` and `configItems`, and deliberately does not
+depend on ArgumentParser, so a GUI with no command line doesn't link it.
+
+This replaced an earlier arrangement worth remembering: `camview/commands/config.swift`
+was compiled into `camgui` through an Xcode file-system-synchronized-group *membership
+exception* — a coupling invisible from the filesystem and visible only in `project.pbxproj`.
+When `e3b00e0` made `Configuration.init()` throwing, `camgui` stopped compiling and stayed
+broken for eight commits, because nothing in the CLI's own build touches that target.
 
 ### Components
 
@@ -74,35 +85,40 @@ by a `UserDefaults` suite, and `SecureConfigItem`, backed by the Keychain. It al
 supplies the `ConfigError` type that camview reuses for its own failures.
 
 **`camview` CLI**
-`CamView` (`camview/camview.swift`) is an empty `AsyncParsableCommand` that exists only
+`CamView` (`Sources/camview/camview.swift`) is an empty `AsyncParsableCommand` that exists only
 to hold the subcommand list and the long `discussion` help text. The four subcommands
 are `list`, `show`, `snapshot`, and `config`. Each one independently constructs a
 `Configuration`, builds a `ProtectService`, does its work, and exits — there is no
 shared session, service locator, or app state. `list` is generic over `ProtectFetchable`,
 so adding a new listable Protect type requires no new printing code.
 
-**`Configuration`** (`camview/commands/config.swift:69`)
-The bridge between stored credentials and `ProtectService`. `configItems` is a
-dictionary mapping the two known keys to their storage strategies; the `config`
-subcommand reads and writes through it, and `Configuration.init()` reads through it,
-throwing if the API key is absent and defaulting the host to `unvr.local` if unset.
+**`CamviewCore`** (`Sources/CamviewCore/Configuration.swift`)
+The bridge between stored credentials and `ProtectService`, and the only code shared by
+both products. `configItems` is a dictionary mapping the two known keys to their storage
+strategies; the `config` subcommand reads and writes through it, and `Configuration.init()`
+reads through it, throwing `ConfigError.unableToLoad` if the API key is absent and
+defaulting the host to `unvr.local` if unset. Its one dependency is `SimpleConfig` — no
+ArgumentParser, so camgui doesn't inherit a CLI framework it has no use for.
 
-**`camgui`**
-A SwiftUI app in early sketch form: `ContentView` loads the camera list in a `.task {}`
-and hands it to `CameraList` for display. It is sandboxed with the
-`group.com.peterichardson.camview` app group entitlement, which is precisely why the
-host is stored in an app-group suite rather than plain `UserDefaults` — a sandboxed
-GUI app and an unsandboxed CLI can both reach it. **This target does not currently
-compile** (see Open Questions).
+**`camgui`** (`camgui/`, project generated from `camgui/project.yml`)
+A SwiftUI app in early sketch form: `ContentView` loads the camera list in a `.task {}` and
+hands it to `CameraList` for display, showing a `ContentUnavailableView` if the load fails
+— a missing API key is the expected first-run state, not a crash. It is sandboxed with the
+`group.com.peterichardson.camview` app group entitlement, which is precisely why the host
+is stored in an app-group suite rather than plain `UserDefaults`: a sandboxed GUI app and
+an unsandboxed CLI can both reach it. Whether the *Keychain* half of that story works under
+the sandbox is still unverified — see Open Questions.
 
-**Stream Deck launchers** (`streamdeck extras/`)
-The Stream Deck can launch an app but cannot pass it arguments, so one app per liveview
-is generated. `target.swift` is a wall of `#if` branches returning a liveview name; the
-`build.nu` nushell script compiles `main.swift` + `target.swift` once per name with a
-different `-D` define, strips the binary, and wraps it in a `<name>.app/Contents/MacOS`
-bundle with a generated `Info.plist` (`LSUIElement`, so nothing appears in the Dock).
-`main.swift` launches `~/bin/camview` by absolute path — these apps do not inherit the
-user's `$PATH`.
+**Stream Deck launchers** (`Sources/StreamdeckLauncher/`, `Scripts/build-launchers.sh`)
+The Stream Deck can launch an app but cannot pass it arguments, so there is one app per
+liveview. Rather than compiling a binary per liveview, one binary is built and copied to N
+names; it derives its liveview from its own executable name via `CommandLine.arguments[0]`.
+Because `camview show` matches liveview names case-insensitively, an executable named
+`driveway180` selects the `Driveway180` liveview with no lookup table to drift. The build
+script wraps each copy in a `<name>.app/Contents/MacOS` bundle with a generated
+`Info.plist` (`LSUIElement`, so nothing appears in the Dock). `main.swift` launches
+`~/bin/camview` by absolute path — these apps do not inherit the user's `$PATH` — and logs
+failures through `OSLog`, since a Stream Deck button has nowhere else to report them.
 
 ### Data Flow
 
@@ -152,10 +168,21 @@ process, so the cache only helps within a single command — which is enough, be
 correct for a one-shot CLI and a latent problem for a long-lived GUI.
 
 **One generated app per Stream Deck button.** The alternative (Automator) worked but
-produced ~3.3 MB bundles; the hand-rolled launchers are ~51 KB and start faster.
-The cost is a hardcoded liveview list duplicated in two files (`target.swift` and
-`build.nu`) that must be edited together whenever a liveview is added — `a10ec04` is
-exactly that maintenance.
+produced ~3.3 MB bundles; the hand-rolled launchers are ~55 KB and start faster.
+
+**The launcher reads `argv[0]` instead of using a compile-time define.** Originally each
+app was a separate `swiftc -D <NAME>` build over a shared `target.swift`, which meant the
+liveview list existed twice — once as a `#if` chain, once as a nushell array — and had to
+be edited in lockstep (`a10ec04` is exactly that maintenance; the `#if` chain had already
+drifted a dead `DOORANDDRIVEWAY` branch the build script never used). Deriving the name at
+runtime collapses that to one list in one script. It also happens to be the only approach
+SPM can express: SPM rejects targets with overlapping sources, so 15 targets sharing one
+source file is not buildable.
+
+**SPM owns the build; Xcode is confined to camgui.** The pbxproj was where problems hid —
+an invisible file-membership exception, and schemes that lived in gitignored `xcuserdata/`
+so no clone could build the CLI by the documented command. `swift build` needs no scheme,
+and camgui's project is generated from a reviewable `project.yml`.
 
 ---
 
@@ -163,10 +190,15 @@ exactly that maintenance.
 
 | Dependency | Purpose |
 |------------|---------|
-| `Protect` (`PeteRichardson/Protect`, branch `main`) | UniFi Protect REST wrappers, models, and the `ProtectFetchable` protocol — all network code lives here, not in this repo |
-| `SimpleConfig` (`PeteRichardson/SimpleConfig`, branch `main`) | Keychain + `UserDefaults` config storage behind one `ConfigStorable` protocol, plus `ConfigError` |
+| `Protect` (`PeteRichardson/Protect`, 1.0.x) | UniFi Protect REST wrappers, models, and the `ProtectFetchable` protocol — all network code lives here, not in this repo |
+| `SimpleConfig` (`PeteRichardson/SimpleConfig`, 1.0.x) | Keychain + `UserDefaults` config storage behind one `ConfigStorable` protocol, plus `ConfigError` |
 | `swift-argument-parser` (Apple, ≥1.5.1) | CLI subcommand tree, argument validation, and generated help |
-| nushell | Build-time only; `streamdeck extras/build.nu` generates the launcher apps |
+| XcodeGen | Build-time only, and only for camgui; generates `camgui.xcodeproj` from `project.yml` |
+
+Both first-party packages are pinned to version tags rather than `branch: "main"`. Their
+`main` branches have since moved ahead of the revisions camview was actually building
+(`Protect` `e5cd3b5f` vs `1.0.0`; `SimpleConfig` `9a9957e1` vs `1.0.0`, with 2.0.0 and
+3.0.0 tagged) — under a branch pin, any re-resolve would have silently changed the build.
 
 ---
 
@@ -198,49 +230,64 @@ camview config read                            # both, api-key obfuscated
 
 Both are equally settable with `security` and `defaults`; see the README.
 
-Building: the project has no plain `camview` scheme. The schemes are `camgui`,
-`camview -h`, `camview config read`, and `camview list cameras` — run-argument
-variants used for debugging in Xcode. Any of the `camview *` schemes builds the CLI:
+Building:
 
 ```sh
-xcodebuild -project camview.xcodeproj -scheme "camview -h" -configuration Release build
+swift build -c release            # -> .build/release/camview
+swift test
+cp .build/release/camview ~/bin/  # the Stream Deck launchers exec this exact path
+./Scripts/build-launchers.sh      # regenerates streamdeck extras/apps/
 ```
 
-Products land in `Build/Release/`. Building with `-target camview` instead of a scheme
-fails to resolve the package modules. `camgui` additionally requires a Mac App
-Development provisioning profile for `com.peterichardson.camgui`.
+camgui is separate, and needs a Mac App Development provisioning profile for
+`com.peterichardson.camgui`:
 
-Deployment targets are macOS 15.5 (CLI) and macOS 26.0 (GUI); both targets are set to
-Swift language version 5.
+```sh
+cd camgui && xcodegen generate
+xcodebuild -project camgui.xcodeproj -scheme camgui -configuration Release build
+```
+
+Deployment targets are macOS 15 (CLI, set in `Package.swift` and floored by `Protect`) and
+macOS 26.0 (GUI). `swift-tools-version` is 6.2, but every target pins
+`.swiftLanguageMode(.v5)`: tools 6.2 defaults to Swift 6 language mode, which surfaces
+`ProtectService`'s non-`Sendable` use across `await` and the mutable `static var
+configuration`. That migration is deliberately separate from the build-system move.
 
 ---
 
 ## Open Questions
 
-- [ ] **`camgui` does not compile.** `ContentView.swift:20` still uses
-      `if let config = Configuration()`, but `Configuration.init()` became throwing in
-      `e3b00e0`. A type-check against the built modules reports two errors: conditional
-      binding on a non-optional, and an unmarked throwing call. It needs
-      `guard let config = try? Configuration()` or a `do/catch` that surfaces the error
-      in the UI. (`try!` on `protect.cameras()` on line 22 will also crash the app on any
-      network failure.)
-- [ ] `CLAUDE.md` documents `xcodebuild -scheme camview`, which does not exist. Either
-      fix the doc or add a plain `camview` scheme.
-- [ ] `list.swift:79` sleeps for two seconds after printing. It appears to be there so
-      the `os_signpost` region survives long enough to be sampled in Instruments, but it
-      makes every `camview list` feel broken. Should be removed or gated behind a flag.
+- [ ] **Can the sandboxed camgui actually read the Keychain?** It builds now, but the
+      entitlements grant only an app group — no `keychain-access-groups`. A sandboxed app
+      gets its own keychain access group and may not see the generic password the
+      unsandboxed CLI wrote under service `com.peterichardson.camview`. Unverified: it has
+      never been run signed. If the camera list comes up empty with a config error, this is
+      why, and the fix is a shared `keychain-access-groups` entitlement on both sides.
+- [ ] `camview config read api-key` prints the key in cleartext (`config.swift`, the
+      single-key branch prints the raw value rather than the obfuscating `description`),
+      contradicting the README. One line; unrelated to the build.
+- [ ] `list.swift` sleeps for two seconds after printing. It sits *after* the closing
+      signpost, so it doesn't extend the measured region — it only delays exit. Should be
+      removed or gated behind a flag.
 - [ ] `show.swift` wraps *every* error in `ConfigError.unknown(error)`, including the
       carefully-worded "Liveview not found" it just threw. The specific message survives
       only because `unknown` prints the underlying error.
-- [ ] Package dependencies are pinned to `main`, not tags. Worth pinning once the API
-      of `Protect` settles.
-- [ ] The liveview list is hardcoded in both `target.swift` and `build.nu`. The
-      Stream Deck README already suggests generating it from `camview list liveviews`.
+- [ ] Three launcher apps — `all`, `familyroom`, `summary` — name liveviews that no longer
+      exist in Protect, so those buttons do nothing. Inherited from the original `build.nu`
+      list. The Stream Deck README's suggestion to generate the list from
+      `camview list liveviews` would prevent it recurring.
+- [ ] Should the launcher list be generated at build time? It's down to one list in
+      `Scripts/build-launchers.sh`, but it's still hand-maintained and can drift from
+      Protect (see above).
 - [ ] Protect is reached over plain `http://`. Fine on a trusted LAN, but the API key
       travels in a header in the clear; worth confirming that's an accepted trade-off
       rather than an oversight.
-- [ ] There are no tests of any kind, and no obvious seam for them — every command
-      constructs its own `ProtectService` directly, so there is nowhere to inject a fake.
+- [ ] Test coverage is a start, not a suite: `CamviewCoreTests` pins the config storage
+      identifiers, but the commands still construct `ProtectService` directly, so there is
+      nowhere to inject a fake and the name→id translation logic remains untested.
+- [ ] Swift 6 language mode is deferred (`.swiftLanguageMode(.v5)` on every target). The
+      known blockers are `ProtectService`'s non-`Sendable` use across `await` and the
+      mutable `static var configuration` in `camview.swift`.
 - [ ] `camgui`'s direction is undecided: today it lists cameras only. The commit that
       introduced it (`6b3c9f0`) mentions snapshots and possibly video streams as the
       intent.
@@ -252,3 +299,4 @@ Swift language version 5.
 | Date | Change |
 |------|--------|
 | 2026-08-02 | Initial document generated from codebase |
+| 2026-08-02 | Rewritten for the Swift Package Manager migration: CamviewCore, generated camgui project, argv[0] launchers |
