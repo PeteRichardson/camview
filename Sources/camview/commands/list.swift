@@ -11,16 +11,6 @@ import CamviewCore
 import OSLog
 import Protect
 
-struct FileNotFoundError: Error {
-    let path: String
-}
-
-extension FileNotFoundError: LocalizedError {
-    var errorDescription: String? {
-        "File not found at path: \(path)"
-    }
-}
-
 /// What `camview list` can enumerate.
 ///
 /// An enum rather than a free `String` so ArgumentParser rejects an unknown value and
