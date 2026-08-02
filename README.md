@@ -13,7 +13,7 @@ OPTIONS:
   -h, --help              Show help information.
 
 SUBCOMMANDS:
-  show [liveview] [viewport]               Set a Liveview for a Viewport
+  show [liveview] [--viewport <name>]      Set a Liveview for a Viewport
   snapshot (camera)                        Display a snapshot of a camera's current view (requires iTerm2 or Warp)
   list (cameras | viewports | liveviews)   Show a list of liveviews, viewports or cameras
   config (read | write)                    Manage tool configuration (protect host, api key)
@@ -41,15 +41,15 @@ camview config read  # Note: the api-key will be slightly obfuscated
 camview list cameras
 camview list viewports
 camview list liveviews
-camview show Backyard MyViewport   # assumes you have a camera called Backyard and a viewport named MyViewport
+camview show Backyard --viewport MyViewport   # assumes a liveview called Backyard and a viewport named MyViewport
 camview snapshot Backyard   # if your terminal supports iTerm image protocal (e.g. iTerm, Warp, Wezterm)
 ```
 
 ----
 
 ### Switching Liveviews
-You can tell a viewport to switch to a specific Liveview by passing the Liveview name and Viewport name on the cmd line. Names are case-INsensitive.
-e.g. `camview show Driveway MyViewport`
+You can tell a viewport to switch to a specific Liveview by passing the Liveview name on the cmd line, and the Viewport with `--viewport` (`-v`). Names are case-INsensitive.
+e.g. `camview show Driveway --viewport MyViewport`
 
 If you don't give a Viewport name, it will use the first viewport returned by the `camview list viewports` command
 e.g. `camview show Backyard`
@@ -57,8 +57,9 @@ e.g. `camview show Backyard`
 If you don't give either a Liveview name or a Viewport name it will, it will try a liveview called "Default" on the first viewport returned by `camview list viewports`
 e.g. `camview show`
 
-Note: You can't give a viewport name without a liveview name.  camview will assume it's a liveview name, and may or may not do what you want.
-e.g. `camview show MyViewport      # Uh-oh! Tries to find a Liveview called MyViewport!!)`
+The viewport used to be a second positional argument, which meant `camview show MyViewport`
+silently looked for a *Liveview* called MyViewport. Making it an option removes the
+ambiguity: the single positional is always the liveview.
 
 
 #### Listing Viewports, Liveviews and Cameras
