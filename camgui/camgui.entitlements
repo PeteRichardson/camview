@@ -2,9 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Shares the protect-host UserDefaults suite with the unsandboxed CLI. -->
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>group.com.peterichardson.camview</string>
 	</array>
+
+	<!-- Required to reach the Protect controller. Without it the sandbox blocks
+	     outbound connections and DNS returns nothing, surfacing as NSURLError
+	     -1003 "A server with the specified hostname could not be found". -->
+	<key>com.apple.security.network.client</key>
+	<true/>
 </dict>
 </plist>
