@@ -32,6 +32,20 @@ private enum SnapshotError: Error, CustomStringConvertible {
 struct Snapshot: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         abstract: "Capture a snapshot of a camera's current view",
+        discussion: """
+
+Where the image goes depends on how you invoke it:
+
+  camview snapshot Backyard                drawn inline in the terminal
+  camview snapshot Backyard > shot.jpg     raw JPEG bytes, a usable file
+  camview snapshot -c Backyard             copied to the clipboard
+
+Inline drawing uses the iTerm inline-image protocol, not Kitty's. Not every
+terminal implements it — iTerm2, Warp and WezTerm are the ones this has been
+tested in.
+
+This captures a single still frame, not a video stream.
+""",
     )
     
     /// Required: there is no camera name that is right for everyone, and the previous
