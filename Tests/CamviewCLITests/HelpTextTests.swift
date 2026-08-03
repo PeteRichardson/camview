@@ -60,4 +60,16 @@ struct HelpTextTests {
         #expect(discussion.contains("clipboard"))
         #expect(discussion.contains(".jpg"))
     }
+
+    @Test("--high-quality is not offered at all, because it never did anything")
+    func highQualityFlagIsGone() {
+        // #14 was filed as "this flag is undocumented", and the fix looked like writing a
+        // sentence about it. It isn't: `ProtectService.getSnapshot(from:with:)` accepts the
+        // Bool and never reads it — the request URL is byte-identical either way — so the
+        // flag silently promised a full-resolution still it could not deliver. Documenting
+        // it would have documented a no-op, so it's removed instead.
+        //
+        // Tracked upstream as PeteRichardson/Protect#40. Restore the flag if that lands.
+        #expect(!CamView.helpMessage(for: Snapshot.self).contains("high-quality"))
+    }
 }

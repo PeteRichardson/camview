@@ -54,9 +54,6 @@ This captures a single still frame, not a video stream.
     @Argument(help: "Name of camera to snapshot")
     var camera: String
     
-    @Flag(help: "get hi-resolution snapshot")
-    var highQuality: Bool = false
-    
     @Flag(name: [.customShort("c"), .customLong("clipboard")], help: "copy to clipboard instead of terminal")
     var sendToClipboard: Bool = false
     
@@ -80,7 +77,12 @@ This captures a single still frame, not a video stream.
         let config = try Configuration() 
         
         let protect = ProtectService(host: config.host, apiKey: config.apiKey)
-        let imageData = try await protect.getSnapshot(from: camera, with: highQuality)
+        // `with:` is Protect's high-quality switch, and it is inert: getSnapshot accepts
+        // the Bool and never reads it, so the request URL is the same either way. camview
+        // used to expose it as `--high-quality`, which promised a full-resolution still it
+        // could not deliver. Passing false is honest about what actually happens here.
+        // See PeteRichardson/Protect#40.
+        let imageData = try await protect.getSnapshot(from: camera, with: false)
 
         if sendToClipboard {  // use clipboard
             // Both failures below used to be silent: a nil NSImage skipped the whole block
