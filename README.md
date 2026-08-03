@@ -6,6 +6,8 @@
 * Display a snapshot of a camera's current view (inline, in a terminal that can draw images)
 
 ### Usage
+<!-- Pasted from `swift run camview --help`, USAGE section onward. Refresh by hand
+     after changing a subcommand's abstract; nothing enforces it (see #64). -->
 ```
 USAGE: camview <subcommand>
 
@@ -13,10 +15,13 @@ OPTIONS:
   -h, --help              Show help information.
 
 SUBCOMMANDS:
-  show [liveview] [--viewport <name>]      Set a Liveview for a Viewport
-  snapshot (camera)                        Display a snapshot of a camera's current view (requires iTerm2 or Warp)
-  list (cameras | viewports | liveviews)   Show a list of liveviews, viewports or cameras
-  config (read | write)                    Manage tool configuration (protect host, api key)
+  list                    Show a list of liveviews, viewports or cameras
+  show                    Set a Liveview for a Viewport
+  snapshot                Capture a snapshot of a camera's current view
+  config                  Manage tool configuration (protect host, api key) and
+                          defaults
+
+  See 'camview help <subcommand>' for detailed help.
 ```
 
 ----
