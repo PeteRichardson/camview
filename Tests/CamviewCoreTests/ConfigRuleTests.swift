@@ -18,6 +18,9 @@ private struct StubItem: ConfigStorable {
     func write(_ value: String) throws {
         Issue.record("write() is not expected during Configuration.init()")
     }
+    func delete() throws {
+        Issue.record("delete() is not expected during Configuration.init()")
+    }
 
     var description: String { "\(key) = \(value ?? "(not set)")" }
     static func == (lhs: StubItem, rhs: StubItem) -> Bool { lhs.key == rhs.key }

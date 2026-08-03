@@ -1,5 +1,5 @@
 {
-  "originHash" : "f8cafaaa8c907cb2b85817f1ed4d315c4029764735e124ec1cc9a49782998b57",
+  "originHash" : "2f3f5fe46a0dec53ec6a99bcbee187e5346a9fbf1359e7dc0d7c9149ad10f86d",
   "pins" : [
     {
       "identity" : "protect",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/PeteRichardson/SimpleConfig",
       "state" : {
-        "revision" : "5015c7640c17e9a46a776b9e869f53f769876b24",
-        "version" : "1.0.0"
+        "revision" : "6a16d5a8ee5235bca9c7ecbc9be852091906d1d0",
+        "version" : "3.1.0"
       }
     },
     {

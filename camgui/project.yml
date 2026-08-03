@@ -68,7 +68,11 @@ targets:
         ENABLE_USER_SELECTED_FILES: readonly
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_NSHumanReadableCopyright: ""
-        SWIFT_VERSION: "5.0"
+        # Matches Package.swift, which no longer pins any target to the v5 language mode.
+        # Leaving this at 5.0 would have made camgui the one place where strict concurrency
+        # checking stayed off — and it is the target most likely to need it, being the only
+        # one with a UI and a main actor.
+        SWIFT_VERSION: "6.0"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         MARKETING_VERSION: "1.0"

@@ -45,8 +45,10 @@ how camgui gets both.
 | `SimpleConfig` | `https://github.com/PeteRichardson/SimpleConfig` | Config storage: `ConfigItem` (UserDefaults), `SecureConfigItem` (Keychain) |
 | `ArgumentParser` | Apple open source | CLI subcommand parsing |
 
-Pinned to version tags, not `branch: "main"` — both first-party packages have moved ahead
-of what camview builds against, so a branch pin would change behaviour on any re-resolve.
+Pinned to version tags, not `branch: "main"` — a branch pin would change behaviour on any
+re-resolve. `SimpleConfig` is floored at **3.1.0**, the release that made `ConfigStorable`
+require `Sendable`; anything older and `CamviewCore` will not compile under Swift 6 language
+mode. `Protect` is still on the 1.0.x line and has moved a long way ahead of it.
 
 ## Build
 
@@ -94,10 +96,28 @@ camview config write protect-host <host-or-ip>
 
 ## Swift Version
 
-`swift-tools-version: 6.2`, but every target pins `.swiftLanguageMode(.v5)`. Tools 6.2
-would otherwise default to Swift 6 language mode, which surfaces `ProtectService`'s
-non-`Sendable` use across `await` and the mutable `static var configuration`. Migrating
-those is tracked separately — don't flip the mode without doing that work.
+`swift-tools-version: 6.2` with **no** `swiftLanguageMode` override on any target, so
+everything builds in Swift 6 language mode with strict concurrency checking on. `camgui`
+matches via `SWIFT_VERSION: "6.0"` in `project.yml`.
+
+Every target used to pin `.swiftLanguageMode(.v5)`, and this section used to say the blocker
+was `ProtectService`'s non-`Sendable` use across `await`. **That was never true.** Measured
+when the mode was actually flipped, the entire package produced exactly one error, and it
+was in neither of the places named:
+
+```
+Sources/CamviewCore/Configuration.swift:16:12: error: let 'configItems' is not
+concurrency-safe because non-'Sendable' type '[String : any ConfigStorable]' may
+have shared mutable state
+```
+
+`ProtectService` raised nothing — it is a plain `class` that never crosses an isolation
+boundary here, and `Protect`'s own manifest has no language-mode override, so it has been
+compiling in Swift 6 mode all along. The `static var configuration` half was real and was
+cleared by #28.
+
+The fix was upstream: SimpleConfig 3.1.0 makes `ConfigStorable` require `Sendable`, which is
+why `Package.swift` floors it there rather than at whatever is newest. Don't lower that pin.
 
 ## Coding Conventions
 
