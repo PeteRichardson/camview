@@ -48,6 +48,29 @@ BIN="$(swift build -c release --product StreamdeckLauncher --show-bin-path)/Stre
 
 mkdir -p "$APPS_DIR"
 
+# Remove bundles left by an earlier run whose name is no longer in VIEWS. Without this the
+# script only ever creates and overwrites, so deleting a name from VIEWS leaves its .app
+# behind and the Stream Deck button keeps working.
+#
+# Scoped to *.app rather than wiping $APPS_DIR, so anything else kept in here — a hand-made
+# Automator app, say, which the Stream Deck README offers as an alternative — survives.
+shopt -s nullglob
+for app in "$APPS_DIR"/*.app; do
+    name="$(basename "$app" .app)"
+    stale=true
+    for view in "${VIEWS[@]}"; do
+        if [ "$view" = "$name" ]; then
+            stale=false
+            break
+        fi
+    done
+    if [ "$stale" = true ]; then
+        rm -rf "$app"
+        echo "   🗑  removed stale $name.app"
+    fi
+done
+shopt -u nullglob
+
 for view in "${VIEWS[@]}"; do
     app="$APPS_DIR/$view.app"
     exe="$app/Contents/MacOS/$view"
