@@ -73,8 +73,14 @@ Note: The listings are minimal and ugly.  There is a lot that can be improved in
 #### Getting Camera Snapshots
 The `camview snapshot [-c | --clipboard ] <camera-name>` command will capture a snapshot from the specified camera and write it to the clipboard (with -c) or to the terminal (without -c).
 
+Without `-c`, where the image goes depends on whether stdout is a terminal:
+
+```
+camview snapshot Backyard                  # inline in the terminal
+camview snapshot Backyard > backyard.jpg   # raw JPEG bytes, a usable file
+```
+
 - It's a static snapshot, not a streaming video.
-- It sends output to the terminal or the clipboard, not to a file
 - It uses the iTerm image protocol, not Kitty
 - Not all Mac terminal programs can show images inline.   I've tested that it works in iTerm2, Warp and Wezterm.
 
