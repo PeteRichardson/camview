@@ -15,28 +15,24 @@ cd "$(dirname "$0")/.."
 # The only place the liveview list lives. Names are lowercase; camview matches
 # liveview names case-insensitively.
 #
-# Cross-check against reality with:
+# Every entry must name a real liveview, or its button does nothing. Cross-check with:
 #     camview list liveviews -f csv | tail -n +2 | cut -d, -f1
 #
-# As of 2026-08-02 three entries below have no matching liveview in Protect and produce
-# buttons that do nothing: all, familyroom, summary. They are kept because they were in
-# the original build.nu list — delete them once you've confirmed they're unwanted.
+# A name removed from this list has its .app pruned on the next run, so deleting an entry
+# is enough to retire a button.
 VIEWS=(
-  all           # no matching liveview as of 2026-08-02
   backyard180
   deck
+  default
   diningroom
   doorbell
   driveway180
   driveway2
-  familyroom    # no matching liveview as of 2026-08-02
   firepit
   frontdoor
   garbage
   katsalley
   sideyard
-  summary       # no matching liveview as of 2026-08-02
-  default
 )
 
 APPS_DIR="streamdeck extras/apps"
