@@ -28,7 +28,13 @@ let package = Package(
         .target(
             name: "CamviewCore",
             dependencies: [
-                .product(name: "SimpleConfig", package: "SimpleConfig")
+                .product(name: "SimpleConfig", package: "SimpleConfig"),
+                // Re-exported (see Protect.swift), not used by this target's own code.
+                // Both products need Protect, and camgui reached it by declaring its own
+                // copy of the pin in camgui/project.yml — two versions with nothing
+                // keeping them in agreement. Routing it through here makes the pin above
+                // the only one.
+                .product(name: "Protect", package: "Protect"),
             ],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),

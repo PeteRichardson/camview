@@ -5,8 +5,7 @@
 //  Created by Peter Richardson on 7/4/25.
 //
 
-import CamviewCore
-import Protect
+import CamviewCore  // re-exports Protect
 import SwiftUI
 
 struct ContentView: View {

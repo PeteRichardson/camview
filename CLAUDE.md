@@ -31,6 +31,12 @@ streamdeck extras/       # Info.plist template, icons, generated apps/ (gitignor
 target rather than an invisible Xcode file-membership exception. It deliberately does
 **not** depend on ArgumentParser — a GUI with no command line shouldn't link it.
 
+It does depend on `Protect` without using it, and re-exports it
+(`Sources/CamviewCore/Protect.swift`). That is what lets camgui reach `Protect` while the
+version stays pinned in `Package.swift` alone — camgui used to declare a second pin in
+`camgui/project.yml` with nothing keeping the two in agreement. `import CamviewCore` is
+how camgui gets both.
+
 ## Key Dependencies (Swift Packages)
 
 | Package | Location | Purpose |

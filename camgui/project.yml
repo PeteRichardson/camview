@@ -21,13 +21,14 @@ options:
 packages:
   # The root SPM package, for the shared CamviewCore library. This replaces the old
   # pbxproj file-membership exception on camview/commands/config.swift.
+  #
+  # Protect is deliberately NOT declared here. camgui uses it directly, but reaches it
+  # through CamviewCore, which re-exports it (Sources/CamviewCore/Protect.swift). A second
+  # pin in this file is a second version that nothing keeps in agreement — and because
+  # camgui resolves its own copy under Build/…/SourcePackages, the CLI and the GUI could
+  # build against different Protect versions with no error. Package.swift holds the only pin.
   camview:
     path: ..
-  # camgui also uses Protect directly (Camera, ProtectService in ContentView).
-  # Kept at the same version the root package pins.
-  Protect:
-    url: https://github.com/PeteRichardson/Protect
-    minorVersion: 1.0.0
 
 targets:
   camgui:
@@ -44,8 +45,6 @@ targets:
     dependencies:
       - package: camview
         product: CamviewCore
-      - package: Protect
-        product: Protect
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.peterichardson.camgui
