@@ -117,3 +117,7 @@ defaults write group.com.peterichardson.camview protect-host unvr.local
 ## Extras
 ### Elgato Stream Deck
 To change the live view on your Viewport by pushing a button on an Elgato Stream Deck, you can wrap the cli "camview show" call in a mac app using Automator.   Or, you can use the code in the Streamdeck Extras folder to quickly generate smaller, faster apps.   For more info, see [this readme](streamdeck%20extras/README.md).
+
+## License
+
+MIT — see [LICENSE](LICENSE).  Use it, change it, ship it.
