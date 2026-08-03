@@ -12,6 +12,23 @@ import CamviewCore
 import Protect
 
 
+/// Snapshot-specific failures. `ConfigError` is the only error type otherwise in reach
+/// here, and it comes from SimpleConfig and renders as "Unable to load config: …" — which
+/// would describe a decode or clipboard failure wrongly.
+private enum SnapshotError: Error, CustomStringConvertible {
+    case undecodableImage(bytes: Int)
+    case clipboardWriteFailed
+
+    var description: String {
+        switch self {
+        case .undecodableImage(let bytes):
+            return "Could not decode the \(bytes) bytes returned by Protect as an image"
+        case .clipboardWriteFailed:
+            return "The system refused the image; the clipboard is unchanged"
+        }
+    }
+}
+
 struct Snapshot: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         abstract: "Capture a snapshot of a camera's current view",
@@ -49,10 +66,16 @@ struct Snapshot: AsyncParsableCommand {
         let imageData = try await protect.getSnapshot(from: camera, with: highQuality)
 
         if sendToClipboard {  // use clipboard
-            if let image = NSImage(data: imageData) {
-                let pasteboard = NSPasteboard.general
-                pasteboard.clearContents()
-                pasteboard.writeObjects([image])
+            // Both failures below used to be silent: a nil NSImage skipped the whole block
+            // and a false from writeObjects was discarded, so the command printed nothing
+            // and exited 0 while the user pasted whatever was on the clipboard before.
+            guard let image = NSImage(data: imageData) else {
+                throw SnapshotError.undecodableImage(bytes: imageData.count)
+            }
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            guard pasteboard.writeObjects([image]) else {
+                throw SnapshotError.clipboardWriteFailed
             }
         } else {
             showImageInITerm2(data: imageData)
