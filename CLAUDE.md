@@ -83,7 +83,8 @@ camview config write protect-host <host-or-ip>
 ## Deployment Targets
 
 - camview CLI / CamviewCore: macOS 15 (`Package.swift` — floor set by the `Protect` dependency)
-- camgui app: macOS 26.0 (Xcode build setting)
+- camgui app: macOS 15 (`camgui/project.yml` — matched to the CLI; the `Protect` floor is
+  what stops it going lower)
 
 ## Swift Version
 

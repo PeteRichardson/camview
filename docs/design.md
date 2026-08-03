@@ -247,8 +247,9 @@ cd camgui && xcodegen generate
 xcodebuild -project camgui.xcodeproj -scheme camgui -configuration Release build
 ```
 
-Deployment targets are macOS 15 (CLI, set in `Package.swift` and floored by `Protect`) and
-macOS 26.0 (GUI). `swift-tools-version` is 6.2, but every target pins
+Both deployment targets are macOS 15 — the CLI's in `Package.swift`, the GUI's in
+`camgui/project.yml`. `Protect` floors both; nothing in camgui needs anything newer than
+`ContentUnavailableView` (macOS 14). `swift-tools-version` is 6.2, but every target pins
 `.swiftLanguageMode(.v5)`: tools 6.2 defaults to Swift 6 language mode, which surfaces
 `ProtectService`'s non-`Sendable` use across `await` and the mutable `static var
 configuration`. That migration is deliberately separate from the build-system move.

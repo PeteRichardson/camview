@@ -11,8 +11,11 @@ name: camgui
 
 options:
   bundleIdPrefix: com.peterichardson
+  # Matches the floor Package.swift sets for CamviewCore, which this app links. It can't
+  # go lower — the Protect dependency requires macOS 15 — and nothing in camgui needs
+  # more: the newest API in use is ContentUnavailableView (macOS 14).
   deploymentTarget:
-    macOS: "26.0"
+    macOS: "15.0"
   createIntermediateGroups: true
 
 packages:
