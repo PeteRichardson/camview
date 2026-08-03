@@ -77,8 +77,13 @@ struct Snapshot: AsyncParsableCommand {
             guard pasteboard.writeObjects([image]) else {
                 throw SnapshotError.clipboardWriteFailed
             }
-        } else {
+        } else if isatty(STDOUT_FILENO) == 1 {
             showImageInITerm2(data: imageData)
+        } else {
+            // Redirected or piped. The escape sequence is for a terminal to interpret, so
+            // emitting it here would corrupt the file: `camview snapshot Backyard > out.jpg`
+            // produced an escape-wrapped base64 blob rather than a JPEG.
+            FileHandle.standardOutput.write(imageData)
         }
     }
 }
