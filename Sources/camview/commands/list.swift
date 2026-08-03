@@ -30,19 +30,27 @@ enum OutputFormat: String, ExpressibleByArgument, CaseIterable {
     case csv
 }
 
-func list<T: ProtectFetchable>(_ array: [T], format: OutputFormat = .summary) {
-    // HEADER
-    if format == .csv {
-        print(T.csvHeader)
-    }
+/// The exact lines `list` would print, as data.
+///
+/// Split out from ``list(_:format:)`` so the format dispatch can be asserted directly.
+/// While this logic printed as it went, testing it meant capturing stdout, which is enough
+/// friction that it simply went untested.
+func renderedLines<T: ProtectFetchable>(_ array: [T], format: OutputFormat) -> [String] {
+    // HEADER — csv only. A summary listing has no header line.
+    var lines: [String] = format == .csv ? [T.csvHeader] : []
 
     // LIST ITEMS
-    for item in array {
-        print(format == .csv ? item.csvDescription() : item.description)
-    }
+    lines += array.map { format == .csv ? $0.csvDescription() : $0.description }
 
     // FOOTER
     // None yet.
+    return lines
+}
+
+func list<T: ProtectFetchable>(_ array: [T], format: OutputFormat = .summary) {
+    for line in renderedLines(array, format: format) {
+        print(line)
+    }
 }
 
 struct List: AsyncParsableCommand {
