@@ -35,12 +35,16 @@ public struct Configuration {
     public let host: String
     public let apiKey: String
 
-    public init() throws {
-        guard let apiKey = try configItems["api-key"]?.read() else {
+    /// - Parameter items: where to read the values from. Defaults to ``configItems``, the
+    ///   real Keychain and App Group storage. Tests substitute stubs: without this
+    ///   parameter the failure paths below are unreachable, because reaching them would
+    ///   mean deleting the developer's own credentials.
+    public init(items: [String: any ConfigStorable] = configItems) throws {
+        guard let apiKey = try items["api-key"]?.read() else {
             throw ConfigError.unableToLoad(
                 reason: "api-key not configured. Run: camview config write api-key <key>")
         }
-        guard let host = try configItems["protect-host"]?.read() else {
+        guard let host = try items["protect-host"]?.read() else {
             throw ConfigError.unableToLoad(
                 reason: "protect-host not configured. Run: camview config write protect-host <host-or-ip>")
         }

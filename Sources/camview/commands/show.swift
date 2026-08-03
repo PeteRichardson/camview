@@ -41,7 +41,7 @@ struct Show: AsyncParsableCommand {
         let viewportId: String
 
         if let viewportName = viewport {
-            guard let id = viewports.first(where: { $0.name.lowercased() == viewportName.lowercased() })?.id else {
+            guard let id = viewports.firstMatching(name: viewportName)?.id else {
                 throw ConfigError.unableToLoad(reason: "Viewport named '\(viewportName)' not found")
             }
             viewportId = id
@@ -54,9 +54,8 @@ struct Show: AsyncParsableCommand {
 
         // Get list of liveviews
         let liveviews = try await protect.liveviews()
-        let lcView = liveview.lowercased()
 
-        guard let liveviewMatch = liveviews.first(where: { $0.name.lowercased() == lcView }) else {
+        guard let liveviewMatch = liveviews.firstMatching(name: liveview) else {
             printError("# ERROR: \(liveview) not found. Try one of the following view names:")
             for candidate in liveviews {
                 printError(candidate.description)

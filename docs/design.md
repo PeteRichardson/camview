@@ -282,9 +282,12 @@ configuration`. That migration is deliberately separate from the build-system mo
 - [ ] Protect is reached over plain `http://`. Fine on a trusted LAN, but the API key
       travels in a header in the clear; worth confirming that's an accepted trade-off
       rather than an oversight.
-- [ ] Test coverage is a start, not a suite: `CamviewCoreTests` pins the config storage
-      identifiers, but the commands still construct `ProtectService` directly, so there is
-      nowhere to inject a fake and the name→id translation logic remains untested.
+- [ ] Test coverage reaches the pure logic but stops at the network. `CamviewCoreTests`
+      pins the config storage identifiers and `Configuration.init()`'s failure paths (via
+      its `items:` seam); `CamviewCLITests` covers case-insensitive name matching and
+      `list` format dispatch. What remains untested is anything requiring a live
+      controller: the commands still construct `ProtectService` directly, so `run()` has
+      nowhere to inject a fake.
 - [ ] Swift 6 language mode is deferred (`.swiftLanguageMode(.v5)` on every target). The
       known blockers are `ProtectService`'s non-`Sendable` use across `await` and the
       mutable `static var configuration` in `camview.swift`.

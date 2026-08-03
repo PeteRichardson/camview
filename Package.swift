@@ -52,5 +52,13 @@ let package = Package(
             dependencies: ["CamviewCore"],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
+        // Depends on the executable target so `@testable import camview` can reach the
+        // CLI's own types. SwiftPM links an executable target into a test bundle fine on
+        // macOS; `@main` is not an obstacle.
+        .testTarget(
+            name: "CamviewCLITests",
+            dependencies: ["camview"],
+            swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
     ]
 )

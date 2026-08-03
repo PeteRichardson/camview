@@ -19,7 +19,8 @@ Sources/
   camview/               # CLI: camview.swift + commands/
   StreamdeckLauncher/    # One binary, copied to N names (derives liveview from argv[0])
 Tests/
-  CamviewCoreTests/
+  CamviewCoreTests/      # config storage identifiers + Configuration.init
+  CamviewCLITests/       # depends on the camview executable target (@testable import camview)
 camgui/                  # SwiftUI app + its own Xcode project
 Scripts/
   build-launchers.sh     # builds the Stream Deck .app bundles
