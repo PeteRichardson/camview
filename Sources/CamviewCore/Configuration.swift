@@ -24,12 +24,14 @@ public let configItems: [String: any ConfigStorable] = [
 
 /// The resolved settings needed to talk to a UniFi Protect controller.
 ///
-/// Reads from ``configItems`` at init time. Throws if the API key hasn't been configured;
-/// the host falls back to ``defaultHost`` when unset.
+/// Reads from ``configItems`` at init time. Throws if either value hasn't been configured.
+///
+/// Neither value has a compiled-in default. `unvr.local` used to stand in for an unset
+/// host, but it is one author's hostname rather than a UniFi convention, so it was wrong
+/// for everyone else. It also masked failure: because the fallback was identical to the
+/// value most likely stored, a *failed* App Group read produced a working-looking host and
+/// no error. Requiring the value makes "unset" and "unreadable" both loud.
 public struct Configuration {
-    /// Used when `protect-host` has never been written.
-    public static let defaultHost = "unvr.local"
-
     public let host: String
     public let apiKey: String
 
@@ -38,7 +40,11 @@ public struct Configuration {
             throw ConfigError.unableToLoad(
                 reason: "api-key not configured. Run: camview config write api-key <key>")
         }
+        guard let host = try configItems["protect-host"]?.read() else {
+            throw ConfigError.unableToLoad(
+                reason: "protect-host not configured. Run: camview config write protect-host <host-or-ip>")
+        }
         self.apiKey = apiKey
-        self.host = try configItems["protect-host"]?.read() ?? Self.defaultHost
+        self.host = host
     }
 }

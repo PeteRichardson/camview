@@ -96,8 +96,8 @@ so adding a new listable Protect type requires no new printing code.
 The bridge between stored credentials and `ProtectService`, and the only code shared by
 both products. `configItems` is a dictionary mapping the two known keys to their storage
 strategies; the `config` subcommand reads and writes through it, and `Configuration.init()`
-reads through it, throwing `ConfigError.unableToLoad` if the API key is absent and
-defaulting the host to `unvr.local` if unset. Its one dependency is `SimpleConfig` — no
+reads through it, throwing `ConfigError.unableToLoad` if either the API key or the host is
+absent. Neither has a compiled-in default. Its one dependency is `SimpleConfig` — no
 ArgumentParser, so camgui doesn't inherit a CLI framework it has no use for.
 
 **`camgui`** (`camgui/`, project generated from `camgui/project.yml`)
