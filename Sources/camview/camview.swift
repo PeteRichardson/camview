@@ -1,5 +1,5 @@
 //
-//  main.swift
+//  camview.swift
 //  camview
 //
 //  Created by Peter Richardson on 6/24/25.

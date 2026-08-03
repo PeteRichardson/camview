@@ -1,5 +1,5 @@
 //
-//  List.swift
+//  list.swift
 //  camview
 //
 //  Created by Peter Richardson on 7/1/25.
