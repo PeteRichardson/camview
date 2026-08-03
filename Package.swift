@@ -19,7 +19,10 @@ let package = Package(
         // ahead of what camview was building via Package.resolved, so a branch pin would
         // silently change behaviour on the next resolve.
         .package(url: "https://github.com/PeteRichardson/Protect", .upToNextMinor(from: "1.0.0")),
-        .package(url: "https://github.com/PeteRichardson/SimpleConfig", .upToNextMinor(from: "1.0.0")),
+        // 3.1.0 is a floor, not a preference: it is the release where `ConfigStorable`
+        // gained `Sendable`, which is what lets `configItems` be a file-scope `let` under
+        // the Swift 6 language mode below. Anything older and CamviewCore does not compile.
+        .package(url: "https://github.com/PeteRichardson/SimpleConfig", .upToNextMinor(from: "3.1.0")),
         .package(url: "https://github.com/apple/swift-argument-parser.git", .upToNextMajor(from: "1.5.1")),
     ],
     targets: [
@@ -35,8 +38,7 @@ let package = Package(
                 // keeping them in agreement. Routing it through here makes the pin above
                 // the only one.
                 .product(name: "Protect", package: "Protect"),
-            ],
-            swiftSettings: [.swiftLanguageMode(.v5)]
+            ]
         ),
         .executableTarget(
             name: "camview",
@@ -44,27 +46,23 @@ let package = Package(
                 "CamviewCore",
                 .product(name: "Protect", package: "Protect"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-            ],
-            swiftSettings: [.swiftLanguageMode(.v5)]
+            ]
         ),
         // One binary, copied to 15 names by Scripts/build-launchers.sh. It derives its
         // liveview from its own executable name, so there is no per-app source variant.
         .executableTarget(
-            name: "StreamdeckLauncher",
-            swiftSettings: [.swiftLanguageMode(.v5)]
+            name: "StreamdeckLauncher"
         ),
         .testTarget(
             name: "CamviewCoreTests",
-            dependencies: ["CamviewCore"],
-            swiftSettings: [.swiftLanguageMode(.v5)]
+            dependencies: ["CamviewCore"]
         ),
         // Depends on the executable target so `@testable import camview` can reach the
         // CLI's own types. SwiftPM links an executable target into a test bundle fine on
         // macOS; `@main` is not an obstacle.
         .testTarget(
             name: "CamviewCLITests",
-            dependencies: ["camview"],
-            swiftSettings: [.swiftLanguageMode(.v5)]
+            dependencies: ["camview"]
         ),
     ]
 )

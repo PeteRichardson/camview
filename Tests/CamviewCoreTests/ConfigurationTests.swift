@@ -35,6 +35,17 @@ struct ConfigStorageIdentifierTests {
         #expect(item.key == "protect-host")
     }
 
+    // There is deliberately no test asserting that `configItems` is `Sendable`. The
+    // compiler already enforces it: `configItems` is a file-scope `let`, so under Swift 6
+    // language mode `Configuration.swift:16` simply does not compile against a SimpleConfig
+    // older than 3.1.0, where `ConfigStorable` gained the requirement.
+    //
+    // A `Task.detached` capture was tried here as a second guard and removed, because it
+    // does not guard anything: with `nonisolated(unsafe)` on the declaration — the one
+    // wrong turn worth catching — the capture still compiles, since region-based isolation
+    // can see the value is not used after the transfer. `Package.swift`'s floor comment is
+    // where that constraint is recorded instead.
+
     // A test asserting `Configuration.defaultHost == "unvr.local"` used to live here. That
     // fallback is gone; what replaced it is covered by `ConfigurationInitTests` below,
     // which the `items:` seam made reachable.
@@ -54,6 +65,10 @@ private struct StubItem: ConfigStorable {
 
     func write(_ value: String) throws {
         Issue.record("write() is not expected during Configuration.init()")
+    }
+
+    func delete() throws {
+        Issue.record("delete() is not expected during Configuration.init()")
     }
 
     // `ConfigStorable` inherits `Comparable` and `CustomStringConvertible`. SimpleConfig
