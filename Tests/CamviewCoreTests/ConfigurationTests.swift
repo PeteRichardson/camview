@@ -65,6 +65,10 @@ private struct StubItem: ConfigStorable {
 
 private struct StubError: Error {}
 
+/// A well-formed stub key. `Configuration.init()` now validates stored values, so a
+/// placeholder like "KEY" no longer models a correctly configured install.
+private let validAPIKey = String(repeating: "k", count: ConfigRule.apiKeyLength)
+
 private func items(apiKey: String?, host: String?) -> [String: any ConfigStorable] {
     [
         "api-key": StubItem(key: "api-key", value: apiKey),
@@ -80,10 +84,10 @@ struct ConfigurationInitTests {
 
     @Test("both values present resolves, without swapping them")
     func bothPresent() throws {
-        let config = try Configuration(items: items(apiKey: "KEY", host: "example.local"))
+        let config = try Configuration(items: items(apiKey: validAPIKey, host: "example.local"))
         // Asserted separately because both are `String`: transposing the two assignments
         // would still compile and still pass a test that only checked one.
-        #expect(config.apiKey == "KEY")
+        #expect(config.apiKey == validAPIKey)
         #expect(config.host == "example.local")
     }
 
@@ -101,9 +105,9 @@ struct ConfigurationInitTests {
     @Test("a missing protect-host throws and names the command that fixes it")
     func missingHost() {
         #expect(throws: ConfigError.self) {
-            try Configuration(items: items(apiKey: "KEY", host: nil))
+            try Configuration(items: items(apiKey: validAPIKey, host: nil))
         }
-        let message = message(from: items(apiKey: "KEY", host: nil))
+        let message = message(from: items(apiKey: validAPIKey, host: nil))
         #expect(message?.contains("camview config write protect-host") == true)
     }
 
@@ -112,7 +116,7 @@ struct ConfigurationInitTests {
         // Distinct from "unset": a Keychain or App Group read that *fails* must not be
         // quietly turned into a missing value.
         let broken: [String: any ConfigStorable] = [
-            "api-key": StubItem(key: "api-key", value: "KEY"),
+            "api-key": StubItem(key: "api-key", value: validAPIKey),
             "protect-host": StubItem(key: "protect-host", value: "h", readError: StubError()),
         ]
         #expect(throws: (any Error).self) {

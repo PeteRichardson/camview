@@ -48,6 +48,18 @@ public struct Configuration {
             throw ConfigError.unableToLoad(
                 reason: "protect-host not configured. Run: camview config write protect-host <host-or-ip>")
         }
+
+        // Values can reach storage without passing through `camview config write` — the
+        // README documents `security add-generic-password` and `defaults write` as
+        // alternatives — so being present is not the same as being usable. Checking here
+        // covers every entry point, since this initializer is the one gate both the CLI
+        // and camgui pass through.
+        for (key, value) in [("api-key", apiKey), ("protect-host", host)] {
+            if let reason = ConfigRule.rejection(for: value, key: key) {
+                throw ConfigError.unableToLoad(reason: "stored \(reason)")
+            }
+        }
+
         self.apiKey = apiKey
         self.host = host
     }

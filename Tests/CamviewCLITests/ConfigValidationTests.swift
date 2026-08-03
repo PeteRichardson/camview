@@ -86,12 +86,8 @@ struct ConfigValidationTests {
         #expect(try ConfigValue.validated("  unvr.local \n", for: "protect-host") == "unvr.local")
     }
 
-    // MARK: drift guard
-
-    @Test("every config key that exists is a config key that gets validated")
-    func everyKeyIsValidated() {
-        // Without this, adding a third key to configItems would silently give it no
-        // validation at all — the default branch in validated(_:for:) accepts anything.
-        #expect(ConfigValue.validatedKeys == Set(configItems.keys))
-    }
+    // The rules themselves, and the guard that every config key has one, are tested in
+    // CamviewCoreTests alongside `ConfigRule` and `configItems`. What's tested here is the
+    // CLI's own layer: trimming, and that a rejection arrives as ArgumentParser's
+    // `ValidationError` so `config write` prints usage and exits 64.
 }
