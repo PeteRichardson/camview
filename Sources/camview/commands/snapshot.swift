@@ -34,8 +34,11 @@ struct Snapshot: AsyncParsableCommand {
         abstract: "Capture a snapshot of a camera's current view",
     )
     
+    /// Required: there is no camera name that is right for everyone, and the previous
+    /// default was simply one of the author's own cameras. Omitting it now prints usage
+    /// rather than failing against a camera the user has never heard of.
     @Argument(help: "Name of camera to snapshot")
-    var camera: String = "FrontDoor"
+    var camera: String
     
     @Flag(help: "get hi-resolution snapshot")
     var highQuality: Bool = false

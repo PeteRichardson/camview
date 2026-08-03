@@ -35,8 +35,9 @@ struct ConfigStorageIdentifierTests {
         #expect(item.key == "protect-host")
     }
 
-    @Test("host falls back to unvr.local when protect-host is unset")
-    func defaultHost() {
-        #expect(Configuration.defaultHost == "unvr.local")
-    }
+    // A fourth test asserting `Configuration.defaultHost == "unvr.local"` was removed
+    // here: that fallback no longer exists. The behaviour that replaced it — `init()`
+    // throwing when `protect-host` is unset — can't be tested yet, because `Configuration`
+    // reads the real Keychain and App Group suite with no seam to substitute them. Adding
+    // that seam is #4, which builds on this branch.
 }
