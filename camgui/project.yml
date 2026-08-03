@@ -34,14 +34,24 @@ targets:
   camgui:
     type: application
     platform: macOS
-    # Listed explicitly rather than globbing `.` — Xcode is configured to put build output
-    # in ./Build, and a recursive glob sweeps the SPM checkouts in there into the app's
-    # Resources ("Multiple commands produce ..."). Add new files here.
+    # Globbed, so a new file in camgui/ is compiled without editing this spec. An explicit
+    # list meant a new .swift file was silently not built — no error, just absent
+    # behaviour, which is the same class of invisible build configuration the SPM
+    # migration removed when it deleted the pbxproj membership exception.
+    #
+    # The excludes are what make globbing safe. `Build` is the one that matters: Xcode puts
+    # build output there, including SPM checkouts, and a recursive glob sweeps those into
+    # the app's Resources ("Multiple commands produce ..."). That failure is why this was
+    # an explicit list in the first place.
     sources:
-      - camguiApp.swift
-      - ContentView.swift
-      - CameraListView.swift
-      - Assets.xcassets
+      - path: .
+        excludes:
+          - Build              # build output, incl. SPM checkouts — the original failure
+          - camgui.xcodeproj   # generated from this file
+          - project.yml        # this file
+          - camgui.entitlements  # referenced by CODE_SIGN_ENTITLEMENTS, not a compile input
+          - ".derived-data-log-*"  # Xcode scratch, appears mid-build
+          - ".DS_Store"
     dependencies:
       - package: camview
         product: CamviewCore
