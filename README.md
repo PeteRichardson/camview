@@ -3,7 +3,7 @@
 ### Features
 * switch Liveviews on Viewports
 * list Viewports, Liveviews, or Cameras
-* Display a snapshot of a camera's current view (requires iTerm2 or Warp)
+* Display a snapshot of a camera's current view (inline, in a terminal that can draw images)
 
 ### Usage
 ```
@@ -81,8 +81,29 @@ camview snapshot Backyard > backyard.jpg   # raw JPEG bytes, a usable file
 ```
 
 - It's a static snapshot, not a streaming video.
-- It uses the iTerm image protocol, not Kitty
-- Not all Mac terminal programs can show images inline.   I've tested that it works in iTerm2, Warp and Wezterm.
+- It uses the iTerm image protocol, not Kitty's.
+
+Not every terminal implements that protocol, and one that doesn't will print the escape
+sequence instead of drawing it — a snapshot is roughly half a megabyte of base64 scrolling
+past. So camview only draws inline when it recognises the terminal:
+
+| Recognised from | Values |
+|-----------------|--------|
+| `TERM_PROGRAM` | `iTerm.app`, `WarpTerminal`, `WezTerm` — the ones I've actually tested |
+| `TERM` | the `ghostty` and `wezterm` families, which is what catches forks and wrappers that report their own `TERM_PROGRAM` |
+
+Anywhere else it refuses and names the alternatives rather than filling your scrollback:
+
+```
+camview snapshot -c Backyard             # to the clipboard
+camview snapshot Backyard > shot.jpg     # to a file
+camview snapshot --inline Backyard       # draw anyway
+```
+
+`--inline` is the escape hatch for a terminal that supports the protocol but isn't on
+either list. Neither list can be complete — there's no cheap way to ask a terminal what it
+can do — so the default is to refuse, on the grounds that one extra flag is a much smaller
+cost than half a megabyte of base64 you can't scroll back past.
 
 #### Configuration Details
 Camview needs two configuration strings:
