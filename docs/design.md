@@ -97,8 +97,11 @@ The bridge between stored credentials and `ProtectService`, and the only code sh
 both products. `configItems` is a dictionary mapping the two known keys to their storage
 strategies; the `config` subcommand reads and writes through it, and `Configuration.init()`
 reads through it, throwing `ConfigError.unableToLoad` if either the API key or the host is
-absent. Neither has a compiled-in default. Its one dependency is `SimpleConfig` — no
-ArgumentParser, so camgui doesn't inherit a CLI framework it has no use for.
+absent. Neither has a compiled-in default. It depends on `SimpleConfig`, which it uses, and
+on `Protect`, which it does not — the latter is re-exported (`Sources/CamviewCore/Protect.swift`)
+so that the `Protect` version is pinned in exactly one place instead of once here and once
+in `camgui/project.yml`. Still no ArgumentParser, so camgui doesn't inherit a CLI framework
+it has no use for.
 
 **`camgui`** (`camgui/`, project generated from `camgui/project.yml`)
 A SwiftUI app in early sketch form: `ContentView` loads the camera list in a `.task {}` and
