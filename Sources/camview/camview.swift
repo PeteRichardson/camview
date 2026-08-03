@@ -10,7 +10,7 @@ import ArgumentParser
 
 @main
 struct CamView : AsyncParsableCommand {
-    static var configuration = CommandConfiguration(
+    static let configuration = CommandConfiguration(
         commandName: "camview",
         abstract: "CLI to control a Unifi Protect Viewport.",
         discussion: """
