@@ -76,6 +76,23 @@ for view in "${VIEWS[@]}"; do
     strip -x "$exe"
     sed "s/REPLACEME/$view/g" "$TEMPLATE" > "$app/Contents/Info.plist"
 
+    # Re-sign as a bundle. The copied executable arrives carrying the linker's ad-hoc
+    # signature, which describes a bare Mach-O and claims a resource seal the bundle has
+    # no _CodeSignature to satisfy — so `codesign -v` on the .app fails even though the
+    # same binary verifies fine on its own. --force replaces that signature rather than
+    # refusing because one is already present.
+    #
+    # Must come last: signing seals Info.plist, so writing it afterwards would invalidate
+    # the signature again.
+    #
+    # Output is captured rather than suppressed: on success codesign just says "replacing
+    # existing signature" once per app, which buries the real output, but on failure its
+    # message is the only explanation of what went wrong.
+    if ! signing_output="$(codesign -s - --force "$app" 2>&1)"; then
+        echo "   ❌ codesign failed for $view.app: $signing_output" >&2
+        exit 1
+    fi
+
     printf "   ✅ %-14s %7s bytes\n" "$view" "$(stat -f%z "$exe")"
 done
 
