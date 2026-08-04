@@ -35,7 +35,7 @@ let target = URL(fileURLWithPath: CommandLine.arguments[0])
 
 `camview show` matches liveview names case-insensitively, so a copy named `driveway180` selects the `Driveway180` liveview with no lookup table to keep in sync.  `Scripts/build-launchers.sh` builds that binary once and copies it to each name in its `VIEWS` list.
 
-**The `VIEWS` array in that script is the only place the liveview list lives.**  Adding a button means adding one word to it; deleting a word retires that button, and the next run prunes the orphaned `.app`.
+**The `VIEWS` array in that script is the only place the liveview list lives.**  Adding a button means adding one word to it; deleting a word retires that button, and the next run prunes the orphaned `.app` — but only bundles the script generated, so anything of your own in `apps/` is left alone.
 
 Every entry must name a liveview that actually exists, or its button silently does nothing.  Cross-check with:
 
@@ -47,7 +47,7 @@ camview list liveviews -f csv | tail -n +2 | cut -d, -f1
 * Each binary is nested in a `<LiveviewName>.app/Contents/MacOS` hierarchy to stop the Finder and the Stream Deck from launching a terminal window.  `Info.plist.template` is the template for each bundle's `Info.plist`, with `REPLACEME` substituted for the liveview name.  The `LSUIElement` key in it is what keeps the launchers out of the Dock and Cmd-Tab.
 * The generated `apps/` folder is gitignored.  It's build output; the script recreates it.
 * Each bundle is ad-hoc signed after its `Info.plist` is written.  Without that step the bundle inherits the linker's signature, which describes a bare executable and claims a resource seal the bundle can't satisfy, so `codesign -v` fails.  Ad-hoc signing still won't satisfy Gatekeeper — fine for locally built, unquarantined apps, but they aren't distributable as-is.
-* The prune step only removes `*.app`, so anything else you keep in `apps/` survives — including a hand-made Automator app, if you'd rather use one of those for a particular button.
+* The prune step only removes bundles the script generated, so a hand-made Automator app you keep in `apps/` survives — as does anything else in there. Bundles are identified by a `CamviewGeneratedLauncher` key that `Info.plist.template` writes into every generated `Info.plist`; a bundle without it is never touched. This note previously claimed the same guarantee on the grounds that the prune step "only removes `*.app`", which was wrong: an Automator app *is* a `.app`, so it matched, and it was deleted on the next run.
 * One improvement would be to have the script ask camview for the current list of Liveviews and generate an app for each, instead of keeping the list in `VIEWS`.  Nothing but the cross-check above stops the two drifting apart.
 * To get nice images for your streamdeck buttons, take a snapshot from your camera, crop it to a square, reduce it to 72x72 and black out the bottom 20 rows of pixels so the button title shows up nicely.
 * If you do use Automator instead of these little launcher apps, it's pretty easy to edit the `Contents/document.wflow` file to change the command line.
