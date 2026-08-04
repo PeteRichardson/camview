@@ -105,7 +105,7 @@ it has no use for.
 
 **`camgui`** (`camgui/`, project generated from `camgui/project.yml`)
 A SwiftUI app in early sketch form: `ContentView` loads the camera list in a `.task {}` and
-hands it to `CameraList` for display, showing a `ContentUnavailableView` if the load fails
+hands it to `CameraListView` for display, showing a `ContentUnavailableView` if the load fails
 — a missing API key is the expected first-run state, not a crash. It is sandboxed with the
 `group.com.peterichardson.camview` app group entitlement, which is precisely why the host
 is stored in an app-group suite rather than plain `UserDefaults`: a sandboxed GUI app and
