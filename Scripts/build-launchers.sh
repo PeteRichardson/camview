@@ -48,8 +48,13 @@ mkdir -p "$APPS_DIR"
 # script only ever creates and overwrites, so deleting a name from VIEWS leaves its .app
 # behind and the Stream Deck button keeps working.
 #
-# Scoped to *.app rather than wiping $APPS_DIR, so anything else kept in here — a hand-made
-# Automator app, say, which the Stream Deck README offers as an alternative — survives.
+# Scoped to *.app rather than wiping $APPS_DIR, so a non-bundle kept in here survives.
+#
+# This comment used to claim a hand-made Automator app survives too. It does not: an
+# Automator app *is* a .app, so it matches this glob, is not in VIEWS, and gets deleted on
+# the next run. Verified. The *.app scoping protects files that aren't bundles and nothing
+# more. Whether this loop should delete bundles it didn't create is a real question, filed
+# separately — it is pre-existing behaviour, not something the rebuild fix below changed.
 shopt -s nullglob
 for app in "$APPS_DIR"/*.app; do
     name="$(basename "$app" .app)"
@@ -71,6 +76,19 @@ for view in "${VIEWS[@]}"; do
     app="$APPS_DIR/$view.app"
     exe="$app/Contents/MacOS/$view"
 
+    # Build each bundle fresh rather than over the top of the last one. A directory's
+    # mtime only moves when an entry is added or removed *in that directory*, and
+    # rebuilding in place never does that to <name>.app: `mkdir -p` is a no-op on an
+    # existing path, and cp/sed overwrite files a level down. So the bundle kept the birth
+    # time and mtime it had when first created, a rebuild was invisible to `ls` and Finder,
+    # and Spotlight -- with no inode change to notice -- went on serving a cached size from
+    # the pre-SPM launcher.
+    #
+    # Scoped to one $app per iteration, named from VIEWS, and never `rm -rf "$APPS_DIR"/*`:
+    # this loop must only ever delete bundles it is about to recreate. `touch "$app"` would
+    # be cheaper and is deliberately not used -- it moves mtime but not birth time, so
+    # Finder's "Created" column would stay wrong.
+    rm -rf "$app"
     mkdir -p "$app/Contents/MacOS"
     cp "$BIN" "$exe"
     strip -x "$exe"
