@@ -1,5 +1,5 @@
 //
-//  CameraList.swift
+//  CameraListView.swift
 //  camgui
 //
 //  Created by Peter Richardson on 7/4/25.
@@ -8,7 +8,7 @@
 import CamviewCore  // re-exports Protect
 import SwiftUI
 
-struct CameraList: View {
+struct CameraListView: View {
     @Binding var cameras: [Camera]
     
     var body: some View {

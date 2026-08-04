@@ -27,20 +27,47 @@ struct FileHeaderTests {
         .deletingLastPathComponent()  // Tests
         .deletingLastPathComponent()  // <root>
 
-    /// `camgui/` is deliberately out of scope. `CameraListView.swift`'s header says
-    /// `CameraList.swift`, which is the same defect — but it's tracked as #31 along with
-    /// the type rename that goes with it, and asserting on it here would make this suite
-    /// fail until that lands.
-    static let scannedDirectories = ["Sources", "Tests"]
+    /// `camgui/` was out of scope when this suite was written: `CameraListView.swift`'s
+    /// header said `CameraList.swift`, which is the same defect, but it was tracked as #31
+    /// along with the type rename that belongs with it. #31 fixed it, so the directory is
+    /// in scope now — which was the whole point of leaving the note.
+    static let scannedDirectories = ["Sources", "Tests", "camgui"]
+
+    /// Build output, which contains source this repo does not own and cannot fix.
+    ///
+    /// `camgui/Build` is the one that forced this: Xcode puts SPM checkouts under it, so
+    /// scanning `camgui/` naively finds `Protect`'s sources and reports six failures for
+    /// headers in someone else's package (`camera.swift` in `Camera.swift`, and so on).
+    /// Worse, it does that only on a machine where camgui has been built — a clean
+    /// checkout passes, so the suite would have looked fine everywhere except a
+    /// developer's laptop.
+    ///
+    /// `camgui/project.yml` excludes the same directory for a closely related reason, and
+    /// its comment records that the recursive-glob version of this mistake is what made
+    /// the `sources:` list explicit in the first place.
+    static let ignoredDirectories: Set<String> = ["Build", ".build", "DerivedData"]
 
     static func swiftFiles() -> [URL] {
-        scannedDirectories.flatMap { directory -> [URL] in
+        var found: [URL] = []
+        for directory in scannedDirectories {
             let root = repoRoot.appendingPathComponent(directory)
             guard let walker = FileManager.default.enumerator(
-                at: root, includingPropertiesForKeys: nil)
-            else { return [] }
-            return walker.compactMap { $0 as? URL }.filter { $0.pathExtension == "swift" }
+                at: root, includingPropertiesForKeys: [.isDirectoryKey])
+            else { continue }
+            for case let url as URL in walker {
+                let isDirectory =
+                    (try? url.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory ?? false
+                // Pruning the walk rather than filtering the results: matching on full
+                // path components would also fire if the repo itself lived under a
+                // directory called `Build`, and would then silently scan nothing.
+                if isDirectory, ignoredDirectories.contains(url.lastPathComponent) {
+                    walker.skipDescendants()
+                    continue
+                }
+                if url.pathExtension == "swift" { found.append(url) }
+            }
         }
+        return found
     }
 
     @Test("the tree is actually being scanned")
@@ -49,6 +76,16 @@ struct FileHeaderTests {
         // would pass by vacuity — the exact failure mode a filesystem-walking test has.
         let files = Self.swiftFiles()
         #expect(files.count > 10, "expected to find the source tree at \(Self.repoRoot.path)")
+    }
+
+    @Test("build output is not scanned")
+    func buildOutputIsExcluded() {
+        // Only meaningful on a machine where camgui has actually been built — which is
+        // exactly the machine where the omission would bite, and never CI.
+        let leaked = Self.swiftFiles().filter { url in
+            url.pathComponents.contains { Self.ignoredDirectories.contains($0) }
+        }
+        #expect(leaked.isEmpty, "scanned build output: \(leaked.map(\.lastPathComponent))")
     }
 
     @Test("every header names the file it is actually in")

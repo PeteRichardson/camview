@@ -14,7 +14,7 @@ struct ContentView: View {
 
     var body: some View {
         NavigationSplitView {
-            CameraList(cameras: $cameras)
+            CameraListView(cameras: $cameras)
                 .navigationTitle("Cameras")
         } detail: {
             if let errorText {
